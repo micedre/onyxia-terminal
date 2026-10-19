@@ -7,6 +7,7 @@ shopt -s histappend
 command -v fzf      >/dev/null && eval "$(fzf --bash)"
 command -v zoxide   >/dev/null && eval "$(zoxide init bash)"
 command -v starship >/dev/null && eval "$(starship init bash)"
+command -v uv       >/dev/null && eval "$(uv generate-shell-completion bash)"
 alias ls='eza --group-directories-first'
 alias ll='eza -la --git --group-directories-first'
 alias k='kubectl'

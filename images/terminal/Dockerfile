@@ -7,6 +7,7 @@ ARG TRZSZ_VERSION=1.2.0
 ARG FZF_VERSION=0.74.4
 ARG NVIM_VERSION=0.12.6
 ARG NERDFONT_VERSION=3.5.1
+ARG UV_VERSION=0.13.1
 
 # Outils terminal (paquets Ubuntu 24.04), puis binaires officiels pour :
 #  - ttyd    : le terminal web
@@ -15,10 +16,17 @@ ARG NERDFONT_VERSION=3.5.1
 #  - starship: le prompt
 #  - neovim  : version récente (celle d'Ubuntu 24.04, 0.9, est trop ancienne pour LazyVim)
 #  - Symbols Nerd Font : icônes du prompt et de LazyVim, servie au navigateur par nginx
+#  - uv      : gestionnaire de projets et d'environnements Python (uv, uvx)
+# Les bibliothèques lib* sont celles de chrome-headless-shell (installé plus bas
+# pour Quarto : diagrammes Mermaid/Graphviz en docx/pdf)
 RUN /opt/apt-install.sh \
         tmux zsh zsh-autosuggestions zsh-syntax-highlighting ncurses-term \
         ripgrep fd-find bat eza zoxide \
-        btop htop ncdu tree nginx xz-utils && \
+        btop htop ncdu tree nginx xz-utils \
+        libnss3 libnspr4 libatk1.0-0t64 libatk-bridge2.0-0t64 libatspi2.0-0t64 \
+        libcups2t64 libdrm2 libgbm1 libxkbcommon0 libxcomposite1 libxdamage1 \
+        libxfixes3 libxrandr2 libpango-1.0-0 libcairo2 libasound2t64 libdbus-1-3 \
+        libexpat1 fonts-liberation && \
     ln -sf /usr/bin/batcat /usr/local/bin/bat && \
     ln -sf /usr/bin/fdfind /usr/local/bin/fd && \
     curl -fsSL -o /usr/local/bin/ttyd \
@@ -36,6 +44,8 @@ RUN /opt/apt-install.sh \
     mkdir -p /opt/fonts && \
     curl -fsSL "https://github.com/ryanoasis/nerd-fonts/releases/download/v${NERDFONT_VERSION}/NerdFontsSymbolsOnly.tar.xz" \
         | tar -xJ -C /opt/fonts SymbolsNerdFontMono-Regular.ttf LICENSE && \
+    curl -fsSL "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-x86_64-unknown-linux-gnu.tar.gz" \
+        | tar -xz --strip-components=1 -C /usr/local/bin && \
     /opt/clean.sh
 
 # opencode : assistant de code IA, configuré par le chart (même script que les
@@ -68,6 +78,13 @@ RUN cat /tmp/bashrc-extra >> ${HOME}/.bashrc && \
     /opt/clean.sh
 
 USER 1000
+
+# Chrome headless pour Quarto (installé dans ~/.local/share/quarto) ; échoue si
+# une bibliothèque système manque
+RUN quarto install chrome-headless-shell --no-prompt --quiet && \
+    chrome="$(find ${HOME}/.local/share/quarto/chrome-headless-shell -name chrome-headless-shell -type f | head -1)" && \
+    test -x "$chrome" && \
+    ! ldd "$chrome" | grep "not found"
 
 # LazyVim (config de départ) ; les plugins et les parseurs treesitter
 # (ensure_installed de LazyVim) sont installés dès la construction pour un
