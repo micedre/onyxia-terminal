@@ -69,11 +69,16 @@ RUN cat /tmp/bashrc-extra >> ${HOME}/.bashrc && \
 
 USER 1000
 
-# LazyVim (config de départ) ; les plugins sont installés dès la construction
-# pour un premier lancement immédiat, même sans réseau
+# LazyVim (config de départ) ; les plugins et les parseurs treesitter
+# (ensure_installed de LazyVim) sont installés dès la construction pour un
+# premier lancement immédiat, même sans réseau ($HOME hors ~/work n'est pas conservé)
 RUN git clone --depth 1 https://github.com/LazyVim/starter ${HOME}/.config/nvim && \
     rm -rf ${HOME}/.config/nvim/.git && \
-    nvim --headless "+Lazy! sync" +qa
+    nvim --headless "+Lazy! sync" +qa && \
+    nvim --headless \
+        '+lua local p = require("lazy.core.config").plugins["nvim-treesitter"]; require("lazy").load({ plugins = { p } }); require("nvim-treesitter").install(require("lazy.core.plugin").values(p, "opts", false).ensure_installed):wait(600000)' \
+        +qa && \
+    test -n "$(ls ${HOME}/.local/share/nvim/site/parser)"
 
 ENV TTYD_PORT=7681
 EXPOSE 7681
