@@ -10,3 +10,6 @@ command -v starship >/dev/null && eval "$(starship init bash)"
 alias ls='eza --group-directories-first'
 alias ll='eza -la --git --group-directories-first'
 alias k='kubectl'
+alias vi='nvim'
+alias vim='nvim'
+export EDITOR=nvim VISUAL=nvim
