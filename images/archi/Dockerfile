@@ -7,7 +7,7 @@ USER root
 # L'archive Linux officielle est publiée sur GitHub (dépôt archimatetool/archi.io).
 # Attention : le tag est réutilisé à chaque version, vérifier l'URL avant de construire.
 ARG ARCHI_VERSION=5.10.0
-ARG ARCHI_TAG=5.10_0
+ARG ARCHI_TAG=5.10
 
 # webkit2gtk : navigateur interne d'Archi (vue "Hints", aperçus)
 RUN /opt/apt-install.sh libwebkit2gtk-4.1-0 && \
