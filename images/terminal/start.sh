@@ -146,8 +146,17 @@ fi
 # mot de passe encodé en base64 dans les logs du pod)
 echo "Démarrage de ttyd sur le port $PORT (shell: $SHELL_BIN, multiplexeur: ${TERMINAL_MULTIPLEXER:-tmux})"
 
+# --- Lancement par le chart vscode-python (voir code-server-shim.sh) ----------
+# nginx écoute sur $PORT et sert ttyd, local, sous /terminal/.
+LISTEN_OPT=(--port "$PORT")
+if [[ "${VSCODE_CHART_COMPAT:-}" == "1" ]]; then
+    sed "s/__PORT__/${PORT}/" /opt/nginx-terminal.conf > /tmp/nginx-terminal.conf
+    nginx -e /dev/stderr -c /tmp/nginx-terminal.conf -g 'daemon off;' &
+    LISTEN_OPT=(--port 7681 --interface lo --base-path /terminal)
+fi
+
 exec ttyd \
-    --port "$PORT" \
+    "${LISTEN_OPT[@]}" \
     --writable \
     --check-origin \
     --credential "${LOGIN}:${PASSWORD}" \
