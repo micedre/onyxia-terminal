@@ -50,6 +50,7 @@ COPY --chmod=0755 start.sh /opt/start.sh
 # Compatibilité avec le chart vscode-python (image personnalisée)
 COPY --chmod=0755 code-server-shim.sh /usr/bin/code-server
 COPY nginx-terminal.conf /opt/nginx-terminal.conf
+COPY login.html /opt/login.html
 COPY dotfiles/zshrc     ${HOME}/.zshrc
 COPY dotfiles/tmux.conf ${HOME}/.tmux.conf
 COPY dotfiles/bashrc-extra /tmp/bashrc-extra

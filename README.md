@@ -35,7 +35,7 @@ Tests locaux :
 ```bash
 docker run --rm -p 7681:7681 -e PASSWORD=test ghcr.io/mon-org/onyxia-terminal:0.1.0
 docker run --rm -p 7681:7681 -e PASSWORD=test --shm-size=1g ghcr.io/mon-org/onyxia-app-archi:0.1.0
-# http://localhost:7681  (terminal : onyxia / test ; Archi : mot de passe "test")
+# http://localhost:7681  (mot de passe "test" dans les deux cas)
 ```
 
 ## 2. Tester le chart sur SSP Cloud
@@ -72,9 +72,9 @@ Le chart refuse de s'installer si l'application choisie n'est pas déclarée dan
 
 | Sujet | Choix |
 |---|---|
-| Un seul port | ttyd ou Xpra écoutent sur 7681 : même ingress, mêmes sondes quel que soit le mode |
-| Authentification | terminal : auth basique ttyd ; application : `auth=env,name=PASSWORD,verify-username=no` (défi HMAC, le mot de passe ne circule pas en clair) |
-| Sondes | `tcpSocket` (ttyd répond 401 à toute requête non authentifiée) |
+| Un seul port | nginx (devant ttyd) ou Xpra écoutent sur 7681 : même ingress, mêmes sondes quel que soit le mode |
+| Authentification | terminal : page de connexion nginx (mot de passe seul), cookie SHA-256(sel aléatoire:mot de passe), ttyd n'écoute qu'en local ; application : `auth=env,name=PASSWORD,verify-username=no` (défi HMAC, le mot de passe ne circule pas en clair) |
+| Sondes | `tcpSocket` (Xpra répond 401 à toute requête non authentifiée) |
 | Fin de l'application | `--exit-with-children` : fermer Archi arrête le conteneur, Kubernetes le relance |
 | Verrouillage | `--start-new-commands=no` : l'utilisateur ne peut lancer que l'application prévue |
 | Données Archi | `Archi.ini` réécrit : préférences, plugins et modèles dans `~/work/.archi` et `~/work/Archi` |

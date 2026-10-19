@@ -1,0 +1,82 @@
+<!doctype html>
+<!-- Page de connexion du terminal web, générée par start.sh (__SALT__, __THEME__).
+     Le cookie contient SHA-256(sel:mot de passe), comparé par nginx. -->
+<html lang="fr" data-theme="__THEME__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terminal · SSP Cloud</title>
+<style>
+  :root { --bg:#fafafa; --card:#ffffff; --fg:#383a42; --muted:#696c77; --border:#d7d7d7; --accent:#4078f2; --error:#e45649; }
+  :root[data-theme="dark"] { --bg:#1e1e2e; --card:#262637; --fg:#cdd6f4; --muted:#a6adc8; --border:#45475a; --accent:#89b4fa; --error:#f38ba8; }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px;
+         background:var(--bg); color:var(--fg); font:15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  form { width:100%; max-width:360px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:28px; }
+  h1 { margin:0 0 4px; font-size:20px; }
+  p { margin:0 0 20px; color:var(--muted); font-size:14px; }
+  label { display:block; margin-bottom:6px; font-weight:600; font-size:14px; }
+  input[type=password] { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px;
+         background:var(--bg); color:var(--fg); font:inherit; }
+  input[type=password]:focus { outline:2px solid var(--accent); outline-offset:-1px; border-color:transparent; }
+  button { width:100%; margin-top:16px; padding:10px; border:0; border-radius:8px; background:var(--accent);
+         color:var(--card); font:inherit; font-weight:600; cursor:pointer; }
+  button:disabled { opacity:.6; cursor:wait; }
+  #msg { min-height:1.5em; margin:10px 0 0; color:var(--error); font-size:14px; }
+</style>
+</head>
+<body>
+<form id="login" autocomplete="on">
+  <h1>Terminal</h1>
+  <p>Collez le mot de passe du service, affiché dans Onyxia.</p>
+  <input type="text" name="username" value="onyxia" autocomplete="username" hidden>
+  <label for="password">Mot de passe</label>
+  <input type="password" id="password" name="password" autocomplete="current-password" required autofocus>
+  <button type="submit" id="submit">Se connecter</button>
+  <div id="msg" role="alert"></div>
+</form>
+<script>
+(function () {
+  var SALT = "__SALT__", NAME = "onyxia_terminal";
+  var form = document.getElementById("login"), msg = document.getElementById("msg"),
+      btn = document.getElementById("submit"), pwd = document.getElementById("password");
+
+  function setCookie(value, maxAge) {
+    document.cookie = NAME + "=" + value + "; Path=/; Max-Age=" + maxAge + "; SameSite=Lax" +
+      (location.protocol === "https:" ? "; Secure" : "");
+  }
+
+  if (!window.crypto || !crypto.subtle) {
+    msg.textContent = "Connexion impossible : la page doit être ouverte en HTTPS.";
+    btn.disabled = true;
+    return;
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    msg.textContent = "";
+    btn.disabled = true;
+    crypto.subtle.digest("SHA-256", new TextEncoder().encode(SALT + ":" + pwd.value)).then(function (buf) {
+      var hex = Array.prototype.map.call(new Uint8Array(buf), function (b) {
+        return ("0" + b.toString(16)).slice(-2);
+      }).join("");
+      setCookie(hex, 604800);
+      return fetch("terminal/", { redirect: "manual", credentials: "same-origin", cache: "no-store" });
+    }).then(function (res) {
+      if (res.type === "opaqueredirect" || !res.ok) {
+        setCookie("", 0);
+        msg.textContent = "Mot de passe incorrect.";
+        btn.disabled = false;
+        pwd.select();
+      } else {
+        location.replace("terminal/");
+      }
+    }).catch(function () {
+      msg.textContent = "Erreur de connexion, réessayez.";
+      btn.disabled = false;
+    });
+  });
+})();
+</script>
+</body>
+</html>

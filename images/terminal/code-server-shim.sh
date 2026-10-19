@@ -20,6 +20,5 @@ for arg in "$@"; do
     esac
 done
 
-export VSCODE_CHART_COMPAT=1
 export TTYD_PORT=8080
 exec /opt/start.sh

@@ -13,6 +13,7 @@
 - Le menu flottant d'Xpra permet d'envoyer ou de récupérer des fichiers.
 - Fermer l'application redémarre le service ; il suffit de recharger la page.
 {{ else }}
+- La page de connexion demande seulement le mot de passe ci-dessus ; `/logout` pour se déconnecter.
 - La session tmux `main` survit à la fermeture de l'onglet : rouvrez le lien pour la retrouver.
 - Plusieurs shells dans le même onglet : Alt+t (nouvel onglet tmux), Alt+Entrée / Alt+- (découper), ou les boutons [+] [⫼] [⊟] de la barre d'état.
 - `trz` / `tsz <fichier>` : envoyer / récupérer des fichiers via le navigateur.
@@ -27,6 +28,7 @@
 - Use Xpra's floating menu to upload or download files.
 - Closing the application restarts the service; just reload the page.
 {{ else }}
+- The login page only asks for the password above; `/logout` to sign out.
 - The tmux session `main` survives closing the tab: reopen the link to get it back.
 - Several shells in one tab: Alt+t (new tmux tab), Alt+Enter / Alt+- (split), or the [+] [⫼] [⊟] buttons in the status bar.
 - `trz` / `tsz <file>`: upload / download files through the browser.

@@ -144,22 +144,25 @@ fi
 
 # --debug 3 : erreurs + warnings seulement (le niveau "notice" affiche le
 # mot de passe encodé en base64 dans les logs du pod)
-echo "Démarrage de ttyd sur le port $PORT (shell: $SHELL_BIN, multiplexeur: ${TERMINAL_MULTIPLEXER:-tmux})"
+echo "Démarrage du terminal sur le port $PORT (shell: $SHELL_BIN, multiplexeur: ${TERMINAL_MULTIPLEXER:-tmux})"
 
-# --- Lancement par le chart vscode-python (voir code-server-shim.sh) ----------
-# nginx écoute sur $PORT et sert ttyd, local, sous /terminal/.
-LISTEN_OPT=(--port "$PORT")
-if [[ "${VSCODE_CHART_COMPAT:-}" == "1" ]]; then
-    sed "s/__PORT__/${PORT}/" /opt/nginx-terminal.conf > /tmp/nginx-terminal.conf
-    nginx -e /dev/stderr -c /tmp/nginx-terminal.conf -g 'daemon off;' &
-    LISTEN_OPT=(--port 7681 --interface lo --base-path /terminal)
-fi
+# --- Connexion : page « mot de passe seul » servie par nginx -----------------
+# nginx écoute sur $PORT et ne sert ttyd (local, sous /terminal/) qu'avec le
+# cookie SHA-256(sel:mot de passe) ; le sel change à chaque démarrage.
+LOGIN_SALT="$(python3 -c 'import secrets; print(secrets.token_hex(16))')"
+LOGIN_TOKEN="$(printf '%s' "${LOGIN_SALT}:${PASSWORD}" | sha256sum | cut -d' ' -f1)"
+LOGIN_THEME=light; [[ "${DARK_MODE:-false}" == "true" ]] && LOGIN_THEME=dark
+mkdir -p -m 700 /tmp/onyxia-terminal
+sed -e "s/__SALT__/${LOGIN_SALT}/" -e "s/__THEME__/${LOGIN_THEME}/" /opt/login.html > /tmp/onyxia-terminal/login.html
+(umask 077 && sed -e "s/__PORT__/${PORT}/" -e "s/__TOKEN__/${LOGIN_TOKEN}/" /opt/nginx-terminal.conf > /tmp/nginx-terminal.conf)
+nginx -e /dev/stderr -c /tmp/nginx-terminal.conf -g 'daemon off;' &
 
 exec ttyd \
-    "${LISTEN_OPT[@]}" \
+    --port 7682 \
+    --interface lo \
+    --base-path /terminal \
     --writable \
     --check-origin \
-    --credential "${LOGIN}:${PASSWORD}" \
     --cwd "$WORKDIR" \
     --ping-interval 30 \
     --debug 3 \
