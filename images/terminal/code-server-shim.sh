@@ -3,6 +3,23 @@
 # officiel vscode-python (service.image.custom), qui exécute
 # « code-server --host 0.0.0.0 ~/work » sur le port 8080. On ignore ces
 # arguments et on démarre le terminal derrière nginx (voir start.sh).
+
+# Les scripts d'init écrits pour VS Code appellent aussi code-server pour gérer
+# les extensions : sans objet ici, on ne fait rien (et surtout on ne démarre pas
+# le terminal).
+for arg in "$@"; do
+    case "$arg" in
+        --install-extension*|--uninstall-extension*|--list-extensions*|--show-versions|--extensions-dir*|--help|-h)
+            echo "code-server (terminal Onyxia) : « $arg » ignoré, VS Code n'est pas installé dans cette image." >&2
+            exit 0
+            ;;
+        --version|-v)
+            echo "0.0.0-onyxia-terminal"
+            exit 0
+            ;;
+    esac
+done
+
 export VSCODE_CHART_COMPAT=1
 export TTYD_PORT=8080
 exec /opt/start.sh
