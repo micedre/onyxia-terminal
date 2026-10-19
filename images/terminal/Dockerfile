@@ -67,6 +67,7 @@ COPY --chmod=0755 code-server-shim.sh /usr/bin/code-server
 COPY nginx-terminal.conf /opt/nginx-terminal.conf
 COPY login.html /opt/login.html
 COPY terminal-page.js aide.txt dotfiles/nvim-clipboard.lua /opt/onyxia-terminal/
+COPY --chmod=0755 aide.sh /opt/onyxia-terminal/aide.sh
 COPY dotfiles/zshrc     ${HOME}/.zshrc
 COPY dotfiles/tmux.conf ${HOME}/.tmux.conf
 COPY dotfiles/bashrc-extra /tmp/bashrc-extra

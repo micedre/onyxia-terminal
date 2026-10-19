@@ -18,8 +18,7 @@
   Copier / coller
   ───────────────
   Sélection souris   copie dans le presse-papiers (« Copié » s'affiche)
-  Double / triple    copie le mot / la ligne
-  clic
+  Double/triple clic copie le mot / la ligne
   Ctrl+V             coller (aussi Maj+Inser, Ctrl+Maj+V)
   Maj+sélection      sélection du navigateur, sans tmux
   Neovim             y copie dans le presse-papiers, Ctrl+V colle
