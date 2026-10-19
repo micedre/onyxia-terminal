@@ -123,7 +123,11 @@ build_font_index() {
     kill "$tmp_pid" 2>/dev/null || true
     [[ $ok -eq 0 ]] || return 1
 
-    FONT_CSS="<style>${font_css}</style></head>" \
+    # xterm.js mesure la largeur des cellules à l'ouverture, souvent avant le
+    # chargement de la police : on la précharge puis on force une nouvelle mesure.
+    local font_js='(function(){var f="JetBrains Mono Web";Promise.all([400,700].map(function(w){return document.fonts.load(w+" 14px \""+f+"\"");})).then(function fix(){var t=window.term;if(!t||!t.options){return setTimeout(fix,100);}var ff=t.options.fontFamily;t.options.fontFamily="monospace";t.options.fontFamily=ff;if(t.fit){t.fit();}});})();'
+
+    FONT_CSS="<style>${font_css}</style><script>${font_js}</script></head>" \
         python3 -c 'import os,sys; print(sys.stdin.read().replace("</head>", os.environ["FONT_CSS"], 1), end="")' \
         < "$index.tmp" > "$index" || return 1
     rm -f "$index.tmp"
