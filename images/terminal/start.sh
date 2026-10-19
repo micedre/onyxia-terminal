@@ -155,6 +155,7 @@ LOGIN_THEME=light; [[ "${DARK_MODE:-false}" == "true" ]] && LOGIN_THEME=dark
 mkdir -p -m 700 /tmp/onyxia-terminal
 sed -e "s/__SALT__/${LOGIN_SALT}/" -e "s/__THEME__/${LOGIN_THEME}/" /opt/login.html > /tmp/onyxia-terminal/login.html
 (umask 077 && sed -e "s/__PORT__/${PORT}/" -e "s/__TOKEN__/${LOGIN_TOKEN}/" /opt/nginx-terminal.conf > /tmp/nginx-terminal.conf)
+nginx -e /dev/stderr -c /tmp/nginx-terminal.conf -t -q || die "configuration nginx invalide."
 nginx -e /dev/stderr -c /tmp/nginx-terminal.conf -g 'daemon off;' &
 
 exec ttyd \
