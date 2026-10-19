@@ -162,6 +162,8 @@ sed -e "s/__SALT__/${LOGIN_SALT}/" -e "s/__THEME__/${LOGIN_THEME}/" /opt/login.h
 nginx -e /dev/stderr -c /tmp/nginx-terminal.conf -t -q || die "configuration nginx invalide."
 nginx -e /dev/stderr -c /tmp/nginx-terminal.conf -g 'daemon off;' &
 
+# fontFamily est passé en chaîne JSON (guillemets doubles) : ttyd lit les
+# valeurs avec json-c, qui sinon ne garderait que le premier nom entre apostrophes
 exec ttyd \
     --port 7682 \
     --interface lo \
@@ -173,7 +175,7 @@ exec ttyd \
     --debug 3 \
     "${INDEX_OPT[@]}" \
     --client-option fontSize="${TERMINAL_FONT_SIZE:-14}" \
-    --client-option fontFamily="'JetBrains Mono Web', 'Symbols Nerd Font Mono', 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Menlo, Consolas, ui-monospace, 'DejaVu Sans Mono', 'Liberation Mono', 'Courier New', monospace" \
+    --client-option fontFamily="\"'JetBrains Mono Web', 'Symbols Nerd Font Mono', 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Menlo, Consolas, ui-monospace, 'DejaVu Sans Mono', 'Liberation Mono', 'Courier New', monospace\"" \
     --client-option "theme=${THEME}" \
     --client-option enableTrzsz=true \
     --client-option enableSixel=true \
