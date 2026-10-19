@@ -1,0 +1,20 @@
+apiVersion: v2
+name: terminal
+description: Un terminal web complet (zsh, tmux, fzf, kubectl...) ou une application graphique (Archi...) dans le navigateur.
+icon: https://raw.githubusercontent.com/tsl0922/ttyd/main/html/src/favicon.png
+keywords:
+  - Terminal
+  - Shell
+  - ttyd
+  - Xpra
+  - Archi
+sources:
+  - https://github.com/tsl0922/ttyd
+  - https://github.com/Xpra-org/xpra
+  - https://github.com/InseeFrLab/helm-charts-interactive-services
+type: application
+version: 0.2.0
+dependencies:
+  - name: library-chart
+    version: 2.1.9
+    repository: https://inseefrlab.github.io/helm-charts-interactive-services

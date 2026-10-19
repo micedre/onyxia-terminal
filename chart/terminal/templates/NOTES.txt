@@ -1,0 +1,35 @@
+{{- $appMode := eq ((.Values.launcher).mode | default "terminal") "application" -}}
+{{- $name := ternary (printf "%s (Xpra)" (.Values.launcher.app | title)) "Terminal" $appMode -}}
+{{- $ctx := dict "serviceName" $name "context" $ -}}
+{{- template "library-chart.general-message" . -}}
+{{- template "library-chart.notes-access-title" . -}}
+{{- template "library-chart.notes-connection" $ctx -}}
+{{- template "library-chart.notes-custom-ports" . -}}
+{{- if eq .Values.userPreferences.language "fr" }}
+### Astuces
+{{ if $appMode }}
+- Le navigateur demande le mot de passe ci-dessus (le nom d'utilisateur est ignoré).
+- Les données de l'application sont enregistrées dans `~/work`, seul dossier conservé.
+- Le menu flottant d'Xpra permet d'envoyer ou de récupérer des fichiers.
+- Fermer l'application redémarre le service ; il suffit de recharger la page.
+{{ else }}
+- La session tmux `main` survit à la fermeture de l'onglet : rouvrez le lien pour la retrouver.
+- `trz` / `tsz <fichier>` : envoyer / récupérer des fichiers via le navigateur.
+- Maj + sélection à la souris pour copier vers le presse-papier du navigateur.
+- Ctrl+W ferme l'onglet du navigateur : installez la page en application (menu du navigateur) pour libérer ces raccourcis.
+{{ end -}}
+{{ else }}
+### Tips
+{{ if $appMode }}
+- The browser asks for the password above (the user name is ignored).
+- Application data is stored in `~/work`, the only persistent folder.
+- Use Xpra's floating menu to upload or download files.
+- Closing the application restarts the service; just reload the page.
+{{ else }}
+- The tmux session `main` survives closing the tab: reopen the link to get it back.
+- `trz` / `tsz <file>`: upload / download files through the browser.
+- Shift + mouse selection to copy to the browser clipboard.
+- Ctrl+W closes the browser tab: install the page as an app (browser menu) to free these shortcuts.
+{{ end -}}
+{{ end -}}
+{{- template "library-chart.notes-deletion" $ctx -}}

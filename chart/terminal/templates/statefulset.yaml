@@ -1,0 +1,236 @@
+{{- $port := .Values.networking.service.port -}}
+{{- $home := printf "/home/%s" .Values.environment.user -}}
+{{- $withCacerts := and .Values.certificates .Values.certificates.cacerts -}}
+{{- /* Mode de lancement : terminal (défaut) ou application graphique via Xpra */ -}}
+{{- $appMode := eq ((.Values.launcher).mode | default "terminal") "application" -}}
+{{- $app := dict -}}
+{{- if $appMode -}}
+{{- $app = index (.Values.apps | default dict) .Values.launcher.app | default dict -}}
+{{- if not $app.image -}}
+{{- fail (printf "launcher.app=%q : application absente de .Values.apps" .Values.launcher.app) -}}
+{{- end -}}
+{{- end -}}
+{{- $image := .Values.service.image.version -}}
+{{- if .Values.service.image.custom.enabled -}}
+{{- $image = .Values.service.image.custom.version -}}
+{{- else if $appMode -}}
+{{- $image = $app.image -}}
+{{- end -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "library-chart.fullname" . }}
+  labels:
+    {{- include "library-chart.labels" . | nindent 4 }}
+spec:
+  {{- if (.Values.global).suspend }}
+  replicas: 0
+  {{- else }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  serviceName: {{ include "library-chart.fullname" . }}
+  selector:
+    matchLabels:
+      {{- include "library-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- if (.Values.git).enabled }}
+        checksum/git: {{ include (print $.Template.BasePath "/secret-git.yaml") . | sha256sum }}
+        {{- end }}
+        {{- if (.Values.s3).enabled }}
+        checksum/s3: {{ include (print $.Template.BasePath "/secret-s3.yaml") . | sha256sum }}
+        {{- end }}
+        {{- if (.Values.vault).enabled }}
+        checksum/vault: {{ include (print $.Template.BasePath "/secret-vault.yaml") . | sha256sum }}
+        {{- end }}
+        {{- if $withCacerts }}
+        checksum/cacerts: {{ .Values.certificates.cacerts | sha256sum }}
+        {{- end }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "library-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- if .Values.runtimeClassName }}
+      runtimeClassName: {{ .Values.runtimeClassName }}
+      {{- end }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "library-chart.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: home
+        {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "library-chart.fullname" .) }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi
+        {{- if $withCacerts }}
+        - name: config-files
+          emptyDir: {}
+        - name: cacerts
+          secret:
+            secretName: {{ include "library-chart.secretNameCacerts" . }}
+        {{- end }}
+      {{- if $withCacerts }}
+      initContainers:
+        # Découpe le bundle de certificats (même logique que les autres IDE Onyxia)
+        - name: split-cacerts
+          image: {{ .Values.service.initContainer.image }}
+          imagePullPolicy: {{ .Values.service.initContainer.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /dest/cacerts
+              {{- if regexMatch "^https?://" .Values.certificates.cacerts }}
+              curl -s $(cat /cacerts/ca-certs.url) -o /tmp/ca.pem
+              {{- else }}
+              cp /cacerts/ca.pem /tmp/ca.pem
+              {{- end }}
+              awk 'BEGIN {c=0;} /BEGIN CERT/{c++} { print > "/dest/cacerts/cert." c ".crt"}' < /tmp/ca.pem
+          volumeMounts:
+            - name: config-files
+              mountPath: /dest
+            - name: cacerts
+              mountPath: /cacerts
+          resources:
+            limits:
+              cpu: 50m
+              memory: 50Mi
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ $image | quote }}
+          imagePullPolicy: {{ .Values.service.image.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args: ["{{ .Values.init.standardInitPath }} /opt/start.sh"]
+          ports:
+            - name: http
+              containerPort: {{ $port }}
+              protocol: TCP
+          env:
+            {{- if .Values.init.regionInit }}
+            - name: REGION_INIT_SCRIPT
+              value: {{ .Values.init.regionInit | quote }}
+            {{- end }}
+            {{- if .Values.init.regionInitCheckSum }}
+            - name: REGION_INIT_SCRIPT_CHECKSUM
+              value: {{ .Values.init.regionInitCheckSum | quote }}
+            {{- end }}
+            {{- if .Values.init.personalInit }}
+            - name: PERSONAL_INIT_SCRIPT
+              value: {{ .Values.init.personalInit | quote }}
+            {{- end }}
+            {{- if .Values.init.personalInitArgs }}
+            - name: PERSONAL_INIT_ARGS
+              value: {{ .Values.init.personalInitArgs | quote }}
+            {{- end }}
+            - name: PROJECT_USER
+              value: {{ .Values.environment.user | quote }}
+            - name: PROJECT_GROUP
+              value: {{ .Values.environment.group | quote }}
+            - name: ROOT_PROJECT_DIRECTORY
+              value: {{ printf "%s/work" $home | quote }}
+            - name: DARK_MODE
+              value: {{ .Values.userPreferences.darkMode | toString | quote }}
+            # Mode de lancement
+            - name: LAUNCH_MODE
+              value: {{ ternary "application" "terminal" $appMode | quote }}
+            {{- if and $appMode $app.command }}
+            - name: APP_COMMAND
+              value: {{ $app.command | quote }}
+            {{- end }}
+            # Port d'écoute (ttyd ou Xpra) et options du terminal
+            - name: TTYD_PORT
+              value: {{ $port | quote }}
+            - name: TERMINAL_SHELL
+              value: {{ .Values.terminal.shell | quote }}
+            - name: TERMINAL_MULTIPLEXER
+              value: {{ .Values.terminal.multiplexer | quote }}
+            - name: TERMINAL_FONT_SIZE
+              value: {{ .Values.terminal.fontSize | quote }}
+            - name: HISTFILE
+              value: {{ printf "%s/work/.zsh_history" $home | quote }}
+            - name: UV_CACHE_DIR
+              value: {{ printf "%s/work/.cache/uv" $home | quote }}
+          envFrom:
+            # PASSWORD (mot de passe du service)
+            - secretRef:
+                name: {{ include "library-chart.secretNameToken" . }}
+            {{- if (.Values.git).enabled }}
+            - secretRef:
+                name: {{ include "library-chart.secretNameGit" . }}
+            {{- end }}
+            {{- if (.Values.s3).enabled }}
+            - secretRef:
+                name: {{ include "library-chart.secretNameS3" . }}
+            {{- end }}
+            {{- if (.Values.vault).enabled }}
+            - secretRef:
+                name: {{ include "library-chart.secretNameVault" . }}
+            {{- end }}
+            {{- if (.Values.proxy).enabled }}
+            - secretRef:
+                name: {{ include "library-chart.secretNameProxy" . }}
+            {{- end }}
+            {{- if .Values.extraEnvVars }}
+            - secretRef:
+                name: {{ include "library-chart.secretNameExtraEnv" . }}
+            {{- end }}
+          # ttyd protège toutes ses URL par l'auth basique (un httpGet recevrait
+          # un 401) : on sonde donc le port TCP.
+          readinessProbe:
+            tcpSocket:
+              port: {{ $port }}
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: {{ $port }}
+            timeoutSeconds: 2
+            failureThreshold: 6
+          {{- if hasKey .Values "startupProbe" }}
+          startupProbe:
+            tcpSocket:
+              port: {{ $port }}
+            {{- toYaml .Values.startupProbe | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: {{ printf "%s/work" $home }}
+              subPath: work
+              name: home
+            - mountPath: /dev/shm
+              name: dshm
+            {{- if and $withCacerts (.Values.certificates).pathToCaBundle }}
+            - name: config-files
+              mountPath: {{ .Values.certificates.pathToCaBundle }}
+              subPath: cacerts
+            {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
