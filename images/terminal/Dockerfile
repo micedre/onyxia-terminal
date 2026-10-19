@@ -29,7 +29,15 @@ RUN /opt/apt-install.sh \
 
 # opencode : assistant de code IA, configuré par le chart (même script que les
 # images datascience officielles, fourni par onyxia-base)
-RUN /opt/install-opencode.sh && \
+# Le script interroge l'API GitHub : en CI, le jeton (secret de build optionnel
+# « github_token ») évite la limite des requêtes anonymes (erreur 403).
+RUN --mount=type=secret,id=github_token \
+    if [ -s /run/secrets/github_token ]; then \
+        export CURL_HOME="$(mktemp -d)" && \
+        printf 'header = "Authorization: Bearer %s"\n' "$(cat /run/secrets/github_token)" > "$CURL_HOME/.curlrc"; \
+    fi && \
+    /opt/install-opencode.sh && \
+    rm -rf "${CURL_HOME:-/nonexistent}" && \
     /opt/clean.sh
 
 COPY --chmod=0755 start.sh /opt/start.sh

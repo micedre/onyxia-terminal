@@ -44,6 +44,7 @@ jobs:
           context: images/terminal
           platforms: linux/amd64
           push: ${{ env.PUSH == 'true' }}
+          secrets: github_token=${{ secrets.GITHUB_TOKEN }}
           tags: |
             ${{ env.REGISTRY }}/onyxia-terminal:${{ env.VERSION }}
             ${{ env.REGISTRY }}/onyxia-terminal:${{ env.SHA_TAG }}
