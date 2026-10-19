@@ -66,6 +66,7 @@ COPY --chmod=0755 start.sh /opt/start.sh
 COPY --chmod=0755 code-server-shim.sh /usr/bin/code-server
 COPY nginx-terminal.conf /opt/nginx-terminal.conf
 COPY login.html /opt/login.html
+COPY terminal-page.js aide.txt dotfiles/nvim-clipboard.lua /opt/onyxia-terminal/
 COPY dotfiles/zshrc     ${HOME}/.zshrc
 COPY dotfiles/tmux.conf ${HOME}/.tmux.conf
 COPY dotfiles/bashrc-extra /tmp/bashrc-extra
@@ -91,6 +92,7 @@ RUN quarto install chrome-headless-shell --no-prompt --quiet && \
 # premier lancement immédiat, même sans réseau ($HOME hors ~/work n'est pas conservé)
 RUN git clone --depth 1 https://github.com/LazyVim/starter ${HOME}/.config/nvim && \
     rm -rf ${HOME}/.config/nvim/.git && \
+    cat /opt/onyxia-terminal/nvim-clipboard.lua >> ${HOME}/.config/nvim/lua/config/options.lua && \
     nvim --headless "+Lazy! sync" +qa && \
     nvim --headless \
         '+lua local p = require("lazy.core.config").plugins["nvim-treesitter"]; require("lazy").load({ plugins = { p } }); require("nvim-treesitter").install(require("lazy.core.plugin").values(p, "opts", false).ensure_installed):wait(600000)' \

@@ -17,7 +17,8 @@
 - La session tmux `main` survit à la fermeture de l'onglet : rouvrez le lien pour la retrouver.
 - Plusieurs shells dans le même onglet : Alt+t (nouvel onglet tmux), Alt+Entrée / Alt+- (découper), ou les boutons [+] [⫼] [⊟] de la barre d'état.
 - `trz` / `tsz <fichier>` : envoyer / récupérer des fichiers via le navigateur.
-- Maj + sélection à la souris pour copier vers le presse-papier du navigateur.
+- Copier : sélection à la souris ; coller : Ctrl+V. Clic droit : menu du terminal (Maj+clic droit : menu du navigateur).
+- Tous les raccourcis : Alt+h ou le bouton [?] aide de la barre d'état.
 - Ctrl+W ferme l'onglet du navigateur : installez la page en application (menu du navigateur) pour libérer ces raccourcis.
 {{ end -}}
 {{ else }}
@@ -32,7 +33,8 @@
 - The tmux session `main` survives closing the tab: reopen the link to get it back.
 - Several shells in one tab: Alt+t (new tmux tab), Alt+Enter / Alt+- (split), or the [+] [⫼] [⊟] buttons in the status bar.
 - `trz` / `tsz <file>`: upload / download files through the browser.
-- Shift + mouse selection to copy to the browser clipboard.
+- Copy: select with the mouse; paste: Ctrl+V. Right-click: terminal menu (Shift+right-click: browser menu).
+- All shortcuts: Alt+h or the [?] aide button in the status bar.
 - Ctrl+W closes the browser tab: install the page as an app (browser menu) to free these shortcuts.
 {{ end -}}
 {{ end -}}

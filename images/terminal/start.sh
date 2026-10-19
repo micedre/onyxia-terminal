@@ -92,23 +92,30 @@ else
 fi
 THEME="$(tr -d '\n' <<< "$THEME")"
 
-# --- Police web ---------------------------------------------------------------
-# Les polices de fontFamily sont celles du navigateur de l'utilisateur, souvent
-# absentes : on télécharge JetBrains Mono et on l'intègre (data URI) à la page
-# d'index de ttyd. En cas d'échec, ttyd garde sa page par défaut.
+# --- Page du terminal ----------------------------------------------------------
+# La page d'index de ttyd est enrichie de :
+#  - JetBrains Mono (téléchargée, intégrée en data URI) et la police d'icônes
+#    Nerd Font (servie par nginx) : les polices de fontFamily sont celles du
+#    navigateur de l'utilisateur, souvent absentes ;
+#  - terminal-page.js : presse-papiers (OSC 52, Ctrl+V), clic droit, polices.
+# En cas d'échec, ttyd garde sa page par défaut.
 FONT_BASE_URL="${TERMINAL_FONT_BASE_URL:-https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.20/files}"
 FONT_DIR="$HOME/.cache/onyxia-terminal"
-FONT_INDEX="$FONT_DIR/index-v2.html"   # à incrémenter quand la page change
+FONT_INDEX="$FONT_DIR/index-v3.html"   # à incrémenter quand la page change
 
-build_font_index() {
+build_index() {
     local index="$FONT_INDEX" weight font_css="" tmp_port tmp_pid
     mkdir -p "$FONT_DIR"
     [[ -s "$index" ]] && return 0
 
     for weight in 400 700; do
         local file="$FONT_DIR/jetbrains-mono-latin-${weight}-normal.woff2"
-        [[ -s "$file" ]] || curl -fsSL --max-time 15 -o "$file" "$FONT_BASE_URL/${file##*/}" || return 1
-        font_css+="@font-face{font-family:'JetBrains Mono Web';font-weight:${weight};font-style:normal;font-display:block;src:url(data:font/woff2;base64,$(base64 -w0 "$file")) format('woff2');}"
+        if [[ -s "$file" ]] || curl -fsSL --max-time 15 -o "$file" "$FONT_BASE_URL/${file##*/}"; then
+            font_css+="@font-face{font-family:'JetBrains Mono Web';font-weight:${weight};font-style:normal;font-display:block;src:url(data:font/woff2;base64,$(base64 -w0 "$file")) format('woff2');}"
+        else
+            rm -f "$file"
+            echo "Police web indisponible (graisse ${weight}), repli sur les polices du navigateur." >&2
+        fi
     done
     # Icônes Nerd Font (prompt, LazyVim) : fichier servi par nginx, en repli
     # glyphe par glyphe après JetBrains Mono
@@ -127,23 +134,19 @@ build_font_index() {
     kill "$tmp_pid" 2>/dev/null || true
     [[ $ok -eq 0 ]] || return 1
 
-    # xterm.js mesure la largeur des cellules à l'ouverture, souvent avant le
-    # chargement de la police : on la précharge puis on force une nouvelle mesure.
-    local font_js='(function(){var f="JetBrains Mono Web";Promise.all([400,700].map(function(w){return document.fonts.load(w+" 14px \""+f+"\"");}).concat(document.fonts.load("14px \"Symbols Nerd Font Mono\"","\ue0a0"))).then(function fix(){var t=window.term;if(!t||!t.options){return setTimeout(fix,100);}var ff=t.options.fontFamily;t.options.fontFamily="monospace";t.options.fontFamily=ff;if(t.fit){t.fit();}});})();'
-
-    FONT_CSS="<style>${font_css}</style><script>${font_js}</script></head>" \
-        python3 -c 'import os,sys; print(sys.stdin.read().replace("</head>", os.environ["FONT_CSS"], 1), end="")' \
+    PAGE_HEAD="<style>${font_css}</style><script>$(cat /opt/onyxia-terminal/terminal-page.js)</script></head>" \
+        python3 -c 'import os,sys; print(sys.stdin.read().replace("</head>", os.environ["PAGE_HEAD"], 1), end="")' \
         < "$index.tmp" > "$index" || return 1
     rm -f "$index.tmp"
-    grep -q "JetBrains Mono Web" "$index"
+    grep -q "onOsc52" "$index"
 }
 
 INDEX_OPT=()
-if build_font_index; then
+if build_index; then
     INDEX_OPT=(--index "$FONT_INDEX")
 else
     rm -f "$FONT_INDEX" "$FONT_INDEX.tmp"
-    echo "Police web indisponible, utilisation des polices du navigateur." >&2
+    echo "Page enrichie indisponible, utilisation de la page par défaut de ttyd." >&2
 fi
 
 # --debug 3 : erreurs + warnings seulement (le niveau "notice" affiche le

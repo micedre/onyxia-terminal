@@ -1,0 +1,51 @@
+  TERMINAL SSP CLOUD · AIDE                         (q pour fermer, ↑↓ défiler)
+
+  Onglets et panneaux (tmux)
+  ──────────────────────────
+  Alt+t              nouvel onglet           (bouton [+] de la barre)
+  Alt+Entrée         diviser à droite        (bouton [⫼])
+  Alt+-              diviser en dessous      (bouton [⊟])
+  Alt+flèches        passer d'un panneau à l'autre (ou clic)
+  Alt+1 … Alt+9      aller à l'onglet n      (ou clic sur l'onglet)
+  Alt+z              zoomer / dézoomer le panneau
+  Alt+w              fermer le panneau
+  Alt+h              cette aide              (bouton [?] aide)
+  Ctrl+b             préfixe tmux : Ctrl+b puis d = détacher, [ = mode copie…
+
+  La session survit à la fermeture de l'onglet : rouvrez le lien pour la
+  retrouver.
+
+  Copier / coller
+  ───────────────
+  Sélection souris   copie dans le presse-papiers (« Copié » s'affiche)
+  Double / triple    copie le mot / la ligne
+  clic
+  Ctrl+V             coller (aussi Maj+Inser, Ctrl+Maj+V)
+  Maj+sélection      sélection du navigateur, sans tmux
+  Neovim             y copie dans le presse-papiers, Ctrl+V colle
+                     (sélection en bloc : Ctrl+Q au lieu de Ctrl+V)
+
+  Clic droit
+  ──────────
+  Clic droit         menu du terminal (coller la dernière copie, diviser…)
+  Maj+clic droit     menu du navigateur
+
+  Fichiers
+  ────────
+  trz                envoyer des fichiers depuis l'ordinateur
+  tsz <fichier>      télécharger un fichier vers l'ordinateur
+  ~/work             seul dossier conservé au redémarrage
+
+  Outils
+  ──────
+  nvim (vi, vim)     Neovim + LazyVim : Espace pour le menu, Espace e = fichiers
+  uv, uvx            projets et environnements Python
+  quarto             documents (Chrome headless inclus pour les diagrammes)
+  opencode           assistant de code IA (si activé dans Onyxia)
+  k                  kubectl ; helm, aws (S3), git, fzf (Ctrl+R), z <dossier>
+
+  Session
+  ───────
+  /logout            ajouter à l'adresse de la page pour se déconnecter
+  Alt+…              si un raccourci est pris par le navigateur, installez la
+                     page en application (menu du navigateur)
