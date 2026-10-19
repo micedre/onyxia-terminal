@@ -167,6 +167,12 @@ startupProbe:
   successThreshold: 1
   timeoutSeconds: 2
 
+ai:
+  enabled: false
+  secretName: "" # Généré à partir du nom du service si vide
+  selectedModel: ""
+  providers: []
+
 userPreferences:
   darkMode: false
   language: "en"

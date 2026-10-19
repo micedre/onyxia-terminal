@@ -922,6 +922,91 @@
         "overwriteSchemaWith": "tolerations.json"
       }
     },
+    "ai": {
+      "title": "AI Assistant",
+      "type": "object",
+      "x-onyxia": {
+        "overwriteSchemaWith": "ai.json"
+      },
+      "properties": {
+        "enabled": {
+          "title": "Enable AI assistant tools",
+          "type": "boolean",
+          "default": false,
+          "x-onyxia": {
+            "overwriteDefaultWith": "{{ai.enabled}}"
+          }
+        },
+        "selectedModel": {
+          "title": "AI model",
+          "description": "Choose the model used by the AI assistant. Its provider is selected automatically.",
+          "type": "string",
+          "listEnum": [],
+          "default": "",
+          "x-onyxia": {
+            "overwriteDefaultWith": "{{ai.defaultModel}}",
+            "overwriteListEnumWith": "{{ai.models}}"
+          },
+          "hidden": {
+            "value": false,
+            "path": "enabled",
+            "isPathRelative": true
+          }
+        },
+        "providers": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "default": "",
+                "x-onyxia": {
+                  "overwriteDefaultWith": "{{name}}"
+                }
+              },
+              "apiBase": {
+                "type": "string",
+                "default": "",
+                "x-onyxia": {
+                  "overwriteDefaultWith": "{{apiBase}}"
+                }
+              },
+              "apiKey": {
+                "type": "string",
+                "default": "",
+                "x-onyxia": {
+                  "overwriteDefaultWith": "{{apiKey}}"
+                }
+              },
+              "type": {
+                "type": "string",
+                "default": "",
+                "x-onyxia": {
+                  "overwriteDefaultWith": "{{type}}"
+                }
+              },
+              "models": {
+                "type": "array",
+                "default": [],
+                "items": {
+                  "type": "string"
+                },
+                "x-onyxia": {
+                  "hidden": true,
+                  "overwriteDefaultWith": "{{models}}"
+                }
+              }
+            }
+          },
+          "x-onyxia": {
+            "hidden": true,
+            "overwriteDefaultWith": "{{ai.providers}}"
+          }
+        }
+      }
+    },
     "userPreferences": {
       "title": "User Preferences",
       "type": "object",

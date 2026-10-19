@@ -1,6 +1,7 @@
 {{- $port := .Values.networking.service.port -}}
 {{- $home := printf "/home/%s" .Values.environment.user -}}
 {{- $withCacerts := and .Values.certificates .Values.certificates.cacerts -}}
+{{- $aiAssistant := include "library-chart.aiAssistant" . | fromJson -}}
 {{- /* Mode de lancement : terminal (défaut) ou application graphique via Xpra */ -}}
 {{- $appMode := eq ((.Values.launcher).mode | default "terminal") "application" -}}
 {{- $app := dict -}}
@@ -47,6 +48,9 @@ spec:
         {{- if $withCacerts }}
         checksum/cacerts: {{ .Values.certificates.cacerts | sha256sum }}
         {{- end }}
+        {{- if $aiAssistant.enabled }}
+        checksum/opencode: {{ include (print $.Template.BasePath "/secret-opencode.yaml") . | sha256sum }}
+        {{- end }}
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -75,15 +79,47 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: 1Gi
-        {{- if $withCacerts }}
+        {{- if or $withCacerts $aiAssistant.enabled }}
         - name: config-files
           emptyDir: {}
+        {{- end }}
+        {{- if $withCacerts }}
         - name: cacerts
           secret:
             secretName: {{ include "library-chart.secretNameCacerts" . }}
         {{- end }}
-      {{- if $withCacerts }}
+        {{- if $aiAssistant.enabled }}
+        - name: secret-opencode
+          secret:
+            secretName: {{ printf "%s-secretopencode" (include "library-chart.fullname" .) }}
+        {{- end }}
+      {{- if or $withCacerts $aiAssistant.enabled }}
       initContainers:
+        {{- if $aiAssistant.enabled }}
+        # Copie la config opencode dans un volume inscriptible (opencode écrit
+        # à côté de sa config), comme dans les autres IDE Onyxia
+        - name: make-secrets-writable
+          image: {{ .Values.service.initContainer.image }}
+          imagePullPolicy: {{ .Values.service.initContainer.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /dest/opencode
+              cp /src/opencode/opencode.jsonc /dest/opencode/opencode.jsonc
+          volumeMounts:
+            - name: config-files
+              mountPath: /dest
+            - name: secret-opencode
+              mountPath: /src/opencode
+          resources:
+            limits:
+              cpu: 50m
+              memory: 50Mi
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+        {{- end }}
+        {{- if $withCacerts }}
         # Découpe le bundle de certificats (même logique que les autres IDE Onyxia)
         - name: split-cacerts
           image: {{ .Values.service.initContainer.image }}
@@ -110,6 +146,7 @@ spec:
               memory: 50Mi
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
+        {{- end }}
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -192,6 +229,10 @@ spec:
             - secretRef:
                 name: {{ include "library-chart.secretNameExtraEnv" . }}
             {{- end }}
+            {{- if $aiAssistant.enabled }}
+            - secretRef:
+                name: {{ include "library-chart.secretNameIa" . }}
+            {{- end }}
           # ttyd protège toutes ses URL par l'auth basique (un httpGet recevrait
           # un 401) : on sonde donc le port TCP.
           readinessProbe:
@@ -221,6 +262,11 @@ spec:
             - name: config-files
               mountPath: {{ .Values.certificates.pathToCaBundle }}
               subPath: cacerts
+            {{- end }}
+            {{- if $aiAssistant.enabled }}
+            - name: config-files
+              mountPath: {{ printf "%s/.config/opencode" $home }}
+              subPath: opencode
             {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:

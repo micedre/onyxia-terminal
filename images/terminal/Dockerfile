@@ -27,6 +27,11 @@ RUN /opt/apt-install.sh \
     curl -fsSL https://starship.rs/install.sh | sh -s -- -y -b /usr/local/bin && \
     /opt/clean.sh
 
+# opencode : assistant de code IA, configuré par le chart (même script que les
+# images datascience officielles, fourni par onyxia-base)
+RUN /opt/install-opencode.sh && \
+    /opt/clean.sh
+
 COPY --chmod=0755 start.sh /opt/start.sh
 COPY dotfiles/zshrc     ${HOME}/.zshrc
 COPY dotfiles/tmux.conf ${HOME}/.tmux.conf
