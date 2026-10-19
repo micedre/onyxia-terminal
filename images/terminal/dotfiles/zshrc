@@ -1,5 +1,13 @@
 # ~/.zshrc — terminal web SSP Cloud
 
+# --- PATH et ajouts des scripts d'init --------------------------------------
+# Installations utilisateur (pipx, uv tool, claude...)
+[[ -d "$HOME/.local/bin" && :$PATH: != *":$HOME/.local/bin:"* ]] && PATH="$HOME/.local/bin:$PATH"
+# Les scripts d'init Onyxia écrivent souvent dans ~/.bashrc (PATH, alias) :
+# on reprend ce qui y a été ajouté après la config de l'image.
+[[ -r "$HOME/.bashrc" ]] && \
+    source <(sed -n "/^# >>> fin de la configuration de l'image/,\$p" "$HOME/.bashrc" | tail -n +2) 2>/dev/null
+
 # --- Historique (stocké dans work/ pour survivre aux redémarrages) ----------
 HISTFILE="${HISTFILE:-$HOME/work/.zsh_history}"
 HISTSIZE=100000

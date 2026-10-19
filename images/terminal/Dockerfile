@@ -47,7 +47,10 @@ COPY nginx-terminal.conf /opt/nginx-terminal.conf
 COPY dotfiles/zshrc     ${HOME}/.zshrc
 COPY dotfiles/tmux.conf ${HOME}/.tmux.conf
 COPY dotfiles/bashrc-extra /tmp/bashrc-extra
+# Le marqueur sépare la config de l'image de ce que les scripts d'init ajoutent
+# ensuite à ~/.bashrc, que ~/.zshrc reprend
 RUN cat /tmp/bashrc-extra >> ${HOME}/.bashrc && \
+    echo "# >>> fin de la configuration de l'image (ajouts ultérieurs : scripts d'init) <<<" >> ${HOME}/.bashrc && \
     mkdir -p ${HOME}/.cache && \
     /opt/fix-user-permissions.sh && \
     /opt/clean.sh
