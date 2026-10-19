@@ -98,9 +98,10 @@ THEME="$(tr -d '\n' <<< "$THEME")"
 # d'index de ttyd. En cas d'échec, ttyd garde sa page par défaut.
 FONT_BASE_URL="${TERMINAL_FONT_BASE_URL:-https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.20/files}"
 FONT_DIR="$HOME/.cache/onyxia-terminal"
+FONT_INDEX="$FONT_DIR/index-v2.html"   # à incrémenter quand la page change
 
 build_font_index() {
-    local index="$FONT_DIR/index.html" weight font_css="" tmp_port tmp_pid
+    local index="$FONT_INDEX" weight font_css="" tmp_port tmp_pid
     mkdir -p "$FONT_DIR"
     [[ -s "$index" ]] && return 0
 
@@ -109,6 +110,9 @@ build_font_index() {
         [[ -s "$file" ]] || curl -fsSL --max-time 15 -o "$file" "$FONT_BASE_URL/${file##*/}" || return 1
         font_css+="@font-face{font-family:'JetBrains Mono Web';font-weight:${weight};font-style:normal;font-display:block;src:url(data:font/woff2;base64,$(base64 -w0 "$file")) format('woff2');}"
     done
+    # Icônes Nerd Font (prompt, LazyVim) : fichier servi par nginx, en repli
+    # glyphe par glyphe après JetBrains Mono
+    font_css+="@font-face{font-family:'Symbols Nerd Font Mono';font-display:block;src:url(/fonts/SymbolsNerdFontMono-Regular.ttf) format('truetype');}"
 
     # La page d'index de ttyd est embarquée dans le binaire : on la récupère
     # auprès d'une instance temporaire, locale.
@@ -125,7 +129,7 @@ build_font_index() {
 
     # xterm.js mesure la largeur des cellules à l'ouverture, souvent avant le
     # chargement de la police : on la précharge puis on force une nouvelle mesure.
-    local font_js='(function(){var f="JetBrains Mono Web";Promise.all([400,700].map(function(w){return document.fonts.load(w+" 14px \""+f+"\"");})).then(function fix(){var t=window.term;if(!t||!t.options){return setTimeout(fix,100);}var ff=t.options.fontFamily;t.options.fontFamily="monospace";t.options.fontFamily=ff;if(t.fit){t.fit();}});})();'
+    local font_js='(function(){var f="JetBrains Mono Web";Promise.all([400,700].map(function(w){return document.fonts.load(w+" 14px \""+f+"\"");}).concat(document.fonts.load("14px \"Symbols Nerd Font Mono\"","\ue0a0"))).then(function fix(){var t=window.term;if(!t||!t.options){return setTimeout(fix,100);}var ff=t.options.fontFamily;t.options.fontFamily="monospace";t.options.fontFamily=ff;if(t.fit){t.fit();}});})();'
 
     FONT_CSS="<style>${font_css}</style><script>${font_js}</script></head>" \
         python3 -c 'import os,sys; print(sys.stdin.read().replace("</head>", os.environ["FONT_CSS"], 1), end="")' \
@@ -136,9 +140,9 @@ build_font_index() {
 
 INDEX_OPT=()
 if build_font_index; then
-    INDEX_OPT=(--index "$FONT_DIR/index.html")
+    INDEX_OPT=(--index "$FONT_INDEX")
 else
-    rm -f "$FONT_DIR/index.html" "$FONT_DIR/index.html.tmp"
+    rm -f "$FONT_INDEX" "$FONT_INDEX.tmp"
     echo "Police web indisponible, utilisation des polices du navigateur." >&2
 fi
 
@@ -169,7 +173,7 @@ exec ttyd \
     --debug 3 \
     "${INDEX_OPT[@]}" \
     --client-option fontSize="${TERMINAL_FONT_SIZE:-14}" \
-    --client-option fontFamily="'JetBrains Mono Web', 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Menlo, Consolas, ui-monospace, 'DejaVu Sans Mono', 'Liberation Mono', 'Courier New', monospace" \
+    --client-option fontFamily="'JetBrains Mono Web', 'Symbols Nerd Font Mono', 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Menlo, Consolas, ui-monospace, 'DejaVu Sans Mono', 'Liberation Mono', 'Courier New', monospace" \
     --client-option "theme=${THEME}" \
     --client-option enableTrzsz=true \
     --client-option enableSixel=true \

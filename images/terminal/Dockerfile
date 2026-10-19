@@ -6,6 +6,7 @@ ARG TTYD_VERSION=1.7.7
 ARG TRZSZ_VERSION=1.2.0
 ARG FZF_VERSION=0.74.4
 ARG NVIM_VERSION=0.12.6
+ARG NERDFONT_VERSION=3.5.1
 
 # Outils terminal (paquets Ubuntu 24.04), puis binaires officiels pour :
 #  - ttyd    : le terminal web
@@ -13,10 +14,11 @@ ARG NVIM_VERSION=0.12.6
 #  - fzf     : version récente (le paquet apt ne fournit pas `fzf --zsh`)
 #  - starship: le prompt
 #  - neovim  : version récente (celle d'Ubuntu 24.04, 0.9, est trop ancienne pour LazyVim)
+#  - Symbols Nerd Font : icônes du prompt et de LazyVim, servie au navigateur par nginx
 RUN /opt/apt-install.sh \
         tmux zsh zsh-autosuggestions zsh-syntax-highlighting ncurses-term \
         ripgrep fd-find bat eza zoxide \
-        btop htop ncdu tree nginx && \
+        btop htop ncdu tree nginx xz-utils && \
     ln -sf /usr/bin/batcat /usr/local/bin/bat && \
     ln -sf /usr/bin/fdfind /usr/local/bin/fd && \
     curl -fsSL -o /usr/local/bin/ttyd \
@@ -31,6 +33,9 @@ RUN /opt/apt-install.sh \
     curl -fsSL "https://github.com/neovim/neovim/releases/download/v${NVIM_VERSION}/nvim-linux-x86_64.tar.gz" \
         | tar -xz --strip-components=1 -C /opt/nvim && \
     ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim && \
+    mkdir -p /opt/fonts && \
+    curl -fsSL "https://github.com/ryanoasis/nerd-fonts/releases/download/v${NERDFONT_VERSION}/NerdFontsSymbolsOnly.tar.xz" \
+        | tar -xJ -C /opt/fonts SymbolsNerdFontMono-Regular.ttf LICENSE && \
     /opt/clean.sh
 
 # opencode : assistant de code IA, configuré par le chart (même script que les
