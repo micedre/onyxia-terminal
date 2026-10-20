@@ -61,6 +61,17 @@
   Firefox permet seulement le glisser-déposer.
   ~/work             seul dossier conservé au redémarrage
 
+  Applications web (serveur lancé dans le terminal)
+  ────────────────
+  Cliquer sur l'URL affichée (http://localhost:8000/...) l'ouvre dans le
+  navigateur via le proxy du terminal : <adresse du terminal>/proxy/8000/
+  ports              liste les ports en écoute avec leur lien
+  /absproxy/8000/    garde le chemin, pour les applications réglées avec ce
+                     chemin de base (Vite --base, Streamlit
+                     --server.baseUrlPath, Jupyter --ServerApp.base_url)
+  N'ouvrez ainsi que des applications de confiance : elles partagent
+  l'adresse du terminal.
+
   Outils
   ──────
   nvim (vi, vim)     Neovim + LazyVim : Espace pour le menu, Espace e = fichiers

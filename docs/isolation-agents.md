@@ -159,6 +159,7 @@ levé. Règles :
 | lecture + écriture | `/dev` |
 | lecture + écriture + exécution | la copie de travail et le dossier personnel de la session |
 | connexion TCP sortante | ports 8888 (proxy HTTP) et 4000 (proxy LLM) |
+| écoute TCP (bind) | aucune |
 | tout le reste | refusé : `~onyxia`, `/var/run/secrets`, `/tmp`, les autres sessions… |
 
 Landlock positionne `no_new_privs` : les binaires setuid (sudo) ne donnent plus de
@@ -204,6 +205,16 @@ partageant le réseau du pod aurait pu y ouvrir un shell complet. ttyd écoute
 désormais sur une **socket unix** dans `/tmp/onyxia-terminal` (700) ; nginx y relaie
 (`proxy_pass http://unix:…`). Même sans Landlock, l'utilisateur `agent` ne peut pas
 l'atteindre.
+
+### Proxy des ports du terminal
+
+Le terminal publie les serveurs locaux sous `/proxy/PORT/`, sur **la même origine**
+que le terminal : le JavaScript d'une page ainsi ouverte pourrait piloter le
+terminal (et donc votre session). Une session agent ne peut pas s'en servir pour
+s'échapper : Landlock lui interdit toute écoute TCP (`bind` refusé, vérifié sur
+`127.0.0.1`, `0.0.0.0` et `::1`), donc aucune application de l'agent n'est
+joignable par ce proxy. Pour tester une application écrite par l'agent, lancez-la
+vous-même après relecture, ou dans un pod séparé.
 
 ## Récupérer le travail de l'agent
 

@@ -223,6 +223,31 @@
     if (f && typeof f.sendToServer === "function" && !f.__onyxia) { hookTrzsz(f); t.__onyxiaTrzsz = f; }
   }, 500);
 
+  // --- Liens vers les serveurs locaux --------------------------------------
+  // ttyd rend cliquables les URL affichées (http://localhost:8000/...) et les
+  // ouvre par « w = window.open(); w.location.href = url ». Les adresses
+  // locales du pod sont réécrites vers le proxy du terminal (/proxy/PORT/).
+  var LOCAL_URL = /^https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1?\])(?::(\d+))?(\/[^\s]*)?$/i;
+  function proxied(url) {
+    var m = LOCAL_URL.exec(url);
+    if (!m) { return url; }
+    return location.origin + "/proxy/" + (m[1] || "80") + (m[2] || "/");
+  }
+  var realOpen = window.open;
+  window.open = function (url) {
+    if (arguments.length) {
+      var args = Array.prototype.slice.call(arguments);
+      args[0] = proxied(String(url));
+      return realOpen.apply(window, args);
+    }
+    // Ouverture en deux temps de ttyd : l'URL arrive par location.href, encore
+    // pendant le clic (le bloqueur de fenêtres la laisse passer)
+    return {
+      opener: null,
+      location: { set href(u) { realOpen.call(window, proxied(String(u)), "_blank", "noopener"); } },
+    };
+  };
+
   // --- Clic droit -----------------------------------------------------------
   // Le menu de tmux suffit : on masque celui du navigateur (Maj+clic droit le garde)
   document.addEventListener("contextmenu", function (e) {

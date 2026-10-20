@@ -70,10 +70,12 @@ COPY --chmod=0755 start.sh /opt/start.sh
 # Compatibilité avec le chart vscode-python (image personnalisée)
 COPY --chmod=0755 code-server-shim.sh /usr/bin/code-server
 COPY nginx-terminal.conf /opt/nginx-terminal.conf
+COPY nginx-proxy-common.conf /opt/onyxia-terminal/
 COPY login.html /opt/login.html
 COPY terminal-page.js aide.txt themes.json dotfiles/nvim-onyxia.lua /opt/onyxia-terminal/
 COPY --chmod=0755 aide.sh transfert.sh theme.sh /opt/onyxia-terminal/
 COPY --chmod=0755 theme.sh /usr/local/bin/theme
+COPY --chmod=0755 ports.sh /usr/local/bin/ports
 # Sessions agent isolées : utilisateur sans sudo ni identifiants (voir agent-session.sh)
 COPY agent-session-config.py agent-llm-nginx.conf agent-tinyproxy.conf /opt/onyxia-terminal/
 COPY --chmod=0755 agent-session.sh /usr/local/bin/agent-session

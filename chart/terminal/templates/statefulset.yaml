@@ -183,6 +183,14 @@ spec:
               value: {{ .Values.environment.group | quote }}
             - name: ROOT_PROJECT_DIRECTORY
               value: {{ printf "%s/work" $home | quote }}
+            {{- if .Values.ingress.enabled }}
+            # Adresse du terminal : liens de la commande ports (/proxy/PORT/)
+            - name: TERMINAL_URL
+              value: {{ printf "https://%s" .Values.ingress.hostname | quote }}
+            {{- else if .Values.route.enabled }}
+            - name: TERMINAL_URL
+              value: {{ printf "https://%s" .Values.route.hostname | quote }}
+            {{- end }}
             - name: DARK_MODE
               value: {{ .Values.userPreferences.darkMode | toString | quote }}
             # Mode de lancement

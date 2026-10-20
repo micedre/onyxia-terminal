@@ -50,6 +50,13 @@
       (location.protocol === "https:" ? "; Secure" : "");
   }
 
+  // Retour vers une application du proxy (/proxy/PORT/...) après connexion ;
+  // nginx passe l'adresse brute, sans encodage, après « next= »
+  function nextUrl() {
+    var i = location.search.indexOf("next="), n = i < 0 ? "" : location.search.slice(i + 5);
+    return /^\/(abs)?proxy\/[0-9]+\//.test(n) ? n : "terminal/";
+  }
+
   if (!window.crypto || !crypto.subtle) {
     msg.textContent = "Connexion impossible : la page doit être ouverte en HTTPS.";
     btn.disabled = true;
@@ -73,7 +80,7 @@
         btn.disabled = false;
         pwd.select();
       } else {
-        location.replace("terminal/");
+        location.replace(nextUrl());
       }
     }).catch(function () {
       msg.textContent = "Erreur de connexion, réessayez.";

@@ -42,6 +42,7 @@ local/                 (ignoré par git) valeurs et scripts de test personnels
 | Clic droit | menu tmux en français (aide, coller, onglets, découpage, session agent) ; Maj+clic droit = menu du navigateur |
 | Aide | **Alt+h**, bouton `[?] aide` ou clic droit → Aide : tous les raccourcis |
 | Fichiers | glisser-déposer sur la page (arrive dans le dossier du panneau actif, même si Neovim y tourne), boutons `[↑]` `[↓]` et clic droit (choix des fichiers à télécharger avec fzf), ou `trz` / `tsz <fichier>` ; seul `~/work` est conservé |
+| Applications web | un serveur lancé dans le terminal (`localhost:8000`) s'ouvre via `/proxy/8000/` (préfixe retiré) ou `/absproxy/8000/` (préfixe conservé), comme code-server ; cliquer sur l'URL affichée l'ouvre directement ; `ports` liste les ports en écoute et leurs liens |
 | Éditeur | Neovim 0.12 + LazyVim préinstallé (plugins et parseurs treesitter inclus, aucun téléchargement au lancement) ; `vi`/`vim` = `nvim`, `EDITOR=nvim` |
 | IA | opencode configuré par le chart (bloc `ai`, mêmes réglages que les images datascience) |
 | **Agents isolés** | `agent-session` : agent IA sans identifiants, internet via un proxy à liste blanche journalisé, copie git sans remote — voir [docs/isolation-agents.md](docs/isolation-agents.md) |
@@ -151,6 +152,7 @@ Le chart refuse de s'installer si l'application choisie n'est pas déclarée dan
 | Liste des polices | passée à ttyd en chaîne JSON : ttyd lit les options avec json-c, qui sinon ne garde que le premier nom entre apostrophes |
 | Transferts (trzsz) | chaque transfert s'ouvre dans un panneau tmux temporaire (`transfert.sh`) ; au dépôt, trzsz.js envoie Ctrl+C puis `trz` au panneau actif : `terminal-page.js` remplace ce Ctrl+C par une touche tmux (`User0`) qui ouvre le panneau de réception, où arrive le `trz` |
 | Thème | palettes dans `themes.json` ; tmux demande le changement à la page par une séquence privée (`OSC 7777`, écrite sur le terminal du client), la page répond par une touche (`User1`/`User2`) qui fixe `@theme` dans tmux et passe `set background` aux Neovim ouverts (`nvim --server`) |
+| Proxy des ports | nginx : `/proxy/PORT/` et `/absproxy/PORT/` vers `127.0.0.1:PORT` (repli sur `[::1]`), même cookie que le terminal, WebSocket, réécriture des redirections ; ports du frontal et des proxys agent interdits ; les liens `http://localhost:PORT` cliqués dans le terminal sont réécrits par `terminal-page.js` (enveloppe de `window.open`) |
 | Menu du clic droit | `display-menu -O` : sans cette option, le relâchement du bouton (~100 ms après le clic) ferme le menu aussitôt |
 | Neovim | archive officielle (celle d'Ubuntu 24.04 est trop ancienne pour LazyVim) ; presse-papiers en OSC 52, collage depuis le registre (lire le presse-papiers en OSC 52 bloquerait sous tmux) |
 | opencode | script d'installation d'onyxia-base ; en CI, jeton GitHub passé en secret de build (évite la limite d'API anonyme) ; configuration montée par le chart (`library-chart.secretOpencode`) |
@@ -195,6 +197,10 @@ uniquement via Helm), Firefox (les tests navigateur sont faits avec Chromium).
 - Ctrl+V colle au lieu d'être transmis : dans Neovim, Ctrl+Q remplace Ctrl+V pour la
   sélection en bloc.
 - La page de connexion exige HTTPS (ou `localhost`).
+- Proxy des ports : les applications qui chargent leurs ressources par chemins absolus
+  (`/static/…`) demandent `/absproxy/PORT/` et un chemin de base ; une page ouverte via
+  le proxy partage l'origine du terminal (comme avec code-server) et pourrait piloter
+  le terminal : n'y ouvrir que des applications de confiance.
 - Transferts : choisir des fichiers à envoyer et télécharger demandent Chrome ou Edge
   (API File System Access, utilisée par trzsz.js) ; Firefox permet seulement le glisser-déposer.
 - Agents isolés : filtrage réseau par port et non par hôte, UDP/DNS non filtré, seuls
