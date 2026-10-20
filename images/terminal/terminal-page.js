@@ -144,8 +144,66 @@
     toast("Envoi vers " + dirLabel() + "…");
   }, true);
 
+  // --- Thème clair / sombre -----------------------------------------------
+  // Choix propre à chaque navigateur (localStorage), sinon celui d'Onyxia,
+  // que ttyd applique à chaque connexion. tmux demande un changement par
+  // « ESC ] 7777 ; theme=… BEL » (Alt+c, bouton [◐], commande theme) ; la page
+  // répond par une touche (User1 = clair, User2 = sombre) qui met à jour
+  // l'option @theme de tmux et les Neovim ouverts.
+  var THEME_KEYS = { light: "\x1b[7998~", dark: "\x1b[7997~" };
+  var serverTheme = "light", appliedBg = null;
+
+  function storedTheme() {
+    try { return localStorage.getItem("onyxia-theme"); } catch (e) { return null; }
+  }
+  function storeTheme(name) {
+    try { name ? localStorage.setItem("onyxia-theme", name) : localStorage.removeItem("onyxia-theme"); } catch (e) {}
+  }
+  function wantedTheme() {
+    var s = storedTheme();
+    return s === "light" || s === "dark" ? s : serverTheme;
+  }
+
+  function sendKeys(t, seq) {
+    if (t.__onyxiaTrzsz) { t.__onyxiaTrzsz.sendToServer(seq); } else if (t.input) { t.input(seq, false); }
+  }
+
+  function applyTheme(t, name) {
+    var themes = window.onyxiaThemes;
+    if (!themes || !themes[name]) { return; }
+    appliedBg = themes[name].background;
+    t.options.theme = Object.assign({}, themes[name]);
+    document.documentElement.setAttribute("data-theme", name);
+    document.body.style.background = themes[name].background;
+  }
+
+  function onThemeOsc(t, data) {
+    var m = /^theme=(\w+)/.exec(data);
+    if (!m) { return true; }
+    var cur = wantedTheme(), next = m[1];
+    if (next === "toggle") { next = cur === "dark" ? "light" : "dark"; }
+    if (next === "default") { storeTheme(null); next = serverTheme; }
+    else if (next === "light" || next === "dark") { storeTheme(next); }
+    else if (next === "hello") { next = cur; }   // tmux vient de s'attacher : lui donner le thème
+    else { return true; }
+    if (next !== cur) { applyTheme(t, next); toast(next === "dark" ? "Thème sombre" : "Thème clair"); }
+    sendKeys(t, THEME_KEYS[next]);
+    return true;
+  }
+
+  // ttyd réapplique son thème à chaque connexion : on le note (thème
+  // d'Onyxia) puis on remet celui du navigateur
+  function checkTheme(t) {
+    var cur = t.options.theme;
+    if (!cur || cur.background === appliedBg || !window.onyxiaThemes) { return; }
+    serverTheme = cur.background === window.onyxiaThemes.dark.background ? "dark" : "light";
+    applyTheme(t, wantedTheme());
+  }
+
   function install(t) {
     t.__onyxia = true;
+    checkTheme(t);
+    t.parser.registerOscHandler(7777, function (data) { return onThemeOsc(t, data); });
     t.onTitleChange(function (title) { paneDir = title; });
     t.parser.registerOscHandler(52, onOsc52);
     // Ctrl+V : laisser le navigateur produire son évènement « paste », que
@@ -160,6 +218,7 @@
   setInterval(function () {
     var t = window.term;
     if (t && t.parser && !t.__onyxia) { install(t); }
+    if (t && t.__onyxia) { checkTheme(t); }
     var f = t && t.__onyxia && findTrzsz(t);
     if (f && typeof f.sendToServer === "function" && !f.__onyxia) { hookTrzsz(f); t.__onyxiaTrzsz = f; }
   }, 500);

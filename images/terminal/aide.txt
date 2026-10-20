@@ -42,6 +42,13 @@
   agent-session -- bash       un shell dans la session agent
   Ne lancez pas son code dans votre session : il aurait vos identifiants.
 
+  Thème
+  ─────
+  Alt+m / [◐]        basculer entre thème clair et sombre (mémorisé par
+                     le navigateur ; Neovim suit)
+  theme clair|sombre la même chose en ligne de commande ; theme defaut
+                     revient au thème d'Onyxia
+
   Fichiers
   ────────
   Glisser-déposer    déposer des fichiers sur la page : ils arrivent dans

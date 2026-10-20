@@ -71,8 +71,9 @@ COPY --chmod=0755 start.sh /opt/start.sh
 COPY --chmod=0755 code-server-shim.sh /usr/bin/code-server
 COPY nginx-terminal.conf /opt/nginx-terminal.conf
 COPY login.html /opt/login.html
-COPY terminal-page.js aide.txt dotfiles/nvim-clipboard.lua /opt/onyxia-terminal/
-COPY --chmod=0755 aide.sh transfert.sh /opt/onyxia-terminal/
+COPY terminal-page.js aide.txt themes.json dotfiles/nvim-onyxia.lua /opt/onyxia-terminal/
+COPY --chmod=0755 aide.sh transfert.sh theme.sh /opt/onyxia-terminal/
+COPY --chmod=0755 theme.sh /usr/local/bin/theme
 # Sessions agent isolées : utilisateur sans sudo ni identifiants (voir agent-session.sh)
 COPY agent-session-config.py agent-llm-nginx.conf agent-tinyproxy.conf /opt/onyxia-terminal/
 COPY --chmod=0755 agent-session.sh /usr/local/bin/agent-session
@@ -102,7 +103,7 @@ RUN quarto install chrome-headless-shell --no-prompt --quiet && \
 # premier lancement immédiat, même sans réseau ($HOME hors ~/work n'est pas conservé)
 RUN git clone --depth 1 https://github.com/LazyVim/starter ${HOME}/.config/nvim && \
     rm -rf ${HOME}/.config/nvim/.git && \
-    cat /opt/onyxia-terminal/nvim-clipboard.lua >> ${HOME}/.config/nvim/lua/config/options.lua && \
+    cat /opt/onyxia-terminal/nvim-onyxia.lua >> ${HOME}/.config/nvim/lua/config/options.lua && \
     nvim --headless "+Lazy! sync" +qa && \
     nvim --headless \
         '+lua local p = require("lazy.core.config").plugins["nvim-treesitter"]; require("lazy").load({ plugins = { p } }); require("nvim-treesitter").install(require("lazy.core.plugin").values(p, "opts", false).ensure_installed):wait(600000)' \

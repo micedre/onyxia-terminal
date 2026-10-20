@@ -36,7 +36,7 @@ local/                 (ignoré par git) valeurs et scripts de test personnels
 | Fonction | Détail |
 |---|---|
 | Connexion | page « mot de passe seul » (compatible gestionnaires de mots de passe), session de 7 jours par cookie, `/logout` pour se déconnecter |
-| Affichage | police JetBrains Mono intégrée à la page, icônes Nerd Font (prompt, LazyVim) servies par nginx, thème clair/sombre selon Onyxia |
+| Affichage | police JetBrains Mono intégrée à la page, icônes Nerd Font (prompt, LazyVim) servies par nginx, thème clair/sombre selon Onyxia, à basculer avec **Alt+m**, le bouton `[◐]`, le clic droit ou `theme clair\|sombre` (mémorisé par le navigateur, Neovim suit) |
 | Plusieurs shells | session tmux `main` (survit à la fermeture de l'onglet) ; Alt+t nouvel onglet, Alt+Entrée / Alt+- diviser, Alt+flèches, Alt+1…9, Alt+z zoom, Alt+w fermer ; boutons cliquables `[+] [⫼] [⊟]` dans la barre d'état |
 | Copier / coller | sélection à la souris = copie dans le presse-papiers du navigateur (OSC 52, aussi depuis Neovim), double/triple clic = mot/ligne ; **Ctrl+V** colle |
 | Clic droit | menu tmux en français (aide, coller, onglets, découpage, session agent) ; Maj+clic droit = menu du navigateur |
@@ -150,6 +150,7 @@ Le chart refuse de s'installer si l'application choisie n'est pas déclarée dan
 | Page du terminal | page d'index de ttyd enrichie au démarrage : police intégrée (data URI), police d'icônes, script `terminal-page.js` (nouvelle mesure des cellules après chargement des polices, OSC 52, Ctrl+V, clic droit) |
 | Liste des polices | passée à ttyd en chaîne JSON : ttyd lit les options avec json-c, qui sinon ne garde que le premier nom entre apostrophes |
 | Transferts (trzsz) | chaque transfert s'ouvre dans un panneau tmux temporaire (`transfert.sh`) ; au dépôt, trzsz.js envoie Ctrl+C puis `trz` au panneau actif : `terminal-page.js` remplace ce Ctrl+C par une touche tmux (`User0`) qui ouvre le panneau de réception, où arrive le `trz` |
+| Thème | palettes dans `themes.json` ; tmux demande le changement à la page par une séquence privée (`OSC 7777`, écrite sur le terminal du client), la page répond par une touche (`User1`/`User2`) qui fixe `@theme` dans tmux et passe `set background` aux Neovim ouverts (`nvim --server`) |
 | Menu du clic droit | `display-menu -O` : sans cette option, le relâchement du bouton (~100 ms après le clic) ferme le menu aussitôt |
 | Neovim | archive officielle (celle d'Ubuntu 24.04 est trop ancienne pour LazyVim) ; presse-papiers en OSC 52, collage depuis le registre (lire le presse-papiers en OSC 52 bloquerait sous tmux) |
 | opencode | script d'installation d'onyxia-base ; en CI, jeton GitHub passé en secret de build (évite la limite d'API anonyme) ; configuration montée par le chart (`library-chart.secretOpencode`) |

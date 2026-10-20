@@ -18,6 +18,7 @@
 - Plusieurs shells dans le même onglet : Alt+t (nouvel onglet tmux), Alt+Entrée / Alt+- (découper), ou les boutons [+] [⫼] [⊟] de la barre d'état.
 - Fichiers : glissez-les sur la page pour les envoyer, ou utilisez les boutons [↑] [↓] de la barre d'état (aussi dans le clic droit, ou `trz` / `tsz <fichier>`). Chrome ou Edge requis pour choisir / télécharger.
 - Copier : sélection à la souris ; coller : Ctrl+V. Clic droit : menu du terminal (Maj+clic droit : menu du navigateur).
+- Thème clair / sombre : Alt+m ou le bouton [◐] de la barre d'état (mémorisé par le navigateur).
 - Tous les raccourcis : Alt+h ou le bouton [?] aide de la barre d'état.
 - `agent-session` : un agent IA isolé (sans identifiants, internet via un proxy à liste blanche).
 - Ctrl+W ferme l'onglet du navigateur : installez la page en application (menu du navigateur) pour libérer ces raccourcis.
@@ -35,6 +36,7 @@
 - Several shells in one tab: Alt+t (new tmux tab), Alt+Enter / Alt+- (split), or the [+] [⫼] [⊟] buttons in the status bar.
 - Files: drop them on the page to upload, or use the [↑] [↓] status-bar buttons (also in the right-click menu, or `trz` / `tsz <file>`). Chrome or Edge needed to pick / download.
 - Copy: select with the mouse; paste: Ctrl+V. Right-click: terminal menu (Shift+right-click: browser menu).
+- Light / dark theme: Alt+m or the [◐] status-bar button (remembered by the browser).
 - All shortcuts: Alt+h or the [?] aide button in the status bar.
 - `agent-session`: an isolated AI agent (no credentials, internet through an allowlist proxy).
 - Ctrl+W closes the browser tab: install the page as an app (browser menu) to free these shortcuts.
