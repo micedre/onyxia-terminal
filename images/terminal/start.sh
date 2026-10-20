@@ -165,11 +165,12 @@ sed -e "s/__SALT__/${LOGIN_SALT}/" -e "s/__THEME__/${LOGIN_THEME}/" /opt/login.h
 nginx -e /dev/stderr -c /tmp/nginx-terminal.conf -t -q || die "configuration nginx invalide."
 nginx -e /dev/stderr -c /tmp/nginx-terminal.conf -g 'daemon off;' &
 
+# ttyd écoute sur une socket unix dans un dossier privé (700) et non sur un
+# port local : les sessions agent (autre utilisateur) ne peuvent pas l'atteindre.
 # fontFamily est passé en chaîne JSON (guillemets doubles) : ttyd lit les
 # valeurs avec json-c, qui sinon ne garderait que le premier nom entre apostrophes
 exec ttyd \
-    --port 7682 \
-    --interface lo \
+    --interface /tmp/onyxia-terminal/ttyd.sock \
     --base-path /terminal \
     --writable \
     --check-origin \

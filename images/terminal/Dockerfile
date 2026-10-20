@@ -8,6 +8,7 @@ ARG FZF_VERSION=0.74.4
 ARG NVIM_VERSION=0.12.6
 ARG NERDFONT_VERSION=3.5.1
 ARG UV_VERSION=0.13.1
+ARG LANDRUN_VERSION=0.1.17
 
 # Outils terminal (paquets Ubuntu 24.04), puis binaires officiels pour :
 #  - ttyd    : le terminal web
@@ -17,12 +18,13 @@ ARG UV_VERSION=0.13.1
 #  - neovim  : version récente (celle d'Ubuntu 24.04, 0.9, est trop ancienne pour LazyVim)
 #  - Symbols Nerd Font : icônes du prompt et de LazyVim, servie au navigateur par nginx
 #  - uv      : gestionnaire de projets et d'environnements Python (uv, uvx)
+#  - landrun + tinyproxy : sessions agent isolées (Landlock, proxy filtrant)
 # Les bibliothèques lib* sont celles de chrome-headless-shell (installé plus bas
 # pour Quarto : diagrammes Mermaid/Graphviz en docx/pdf)
 RUN /opt/apt-install.sh \
         tmux zsh zsh-autosuggestions zsh-syntax-highlighting ncurses-term \
         ripgrep fd-find bat eza zoxide \
-        btop htop ncdu tree nginx xz-utils \
+        btop htop ncdu tree nginx xz-utils tinyproxy \
         libnss3 libnspr4 libatk1.0-0t64 libatk-bridge2.0-0t64 libatspi2.0-0t64 \
         libcups2t64 libdrm2 libgbm1 libxkbcommon0 libxcomposite1 libxdamage1 \
         libxfixes3 libxrandr2 libpango-1.0-0 libcairo2 libasound2t64 libdbus-1-3 \
@@ -46,6 +48,9 @@ RUN /opt/apt-install.sh \
         | tar -xJ -C /opt/fonts SymbolsNerdFontMono-Regular.ttf LICENSE && \
     curl -fsSL "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-x86_64-unknown-linux-gnu.tar.gz" \
         | tar -xz --strip-components=1 -C /usr/local/bin && \
+    curl -fsSL -o /usr/local/bin/landrun \
+        "https://github.com/Zouuup/landrun/releases/download/v${LANDRUN_VERSION}/landrun-linux-amd64" && \
+    chmod +x /usr/local/bin/landrun && \
     /opt/clean.sh
 
 # opencode : assistant de code IA, configuré par le chart (même script que les
@@ -68,6 +73,10 @@ COPY nginx-terminal.conf /opt/nginx-terminal.conf
 COPY login.html /opt/login.html
 COPY terminal-page.js aide.txt dotfiles/nvim-clipboard.lua /opt/onyxia-terminal/
 COPY --chmod=0755 aide.sh /opt/onyxia-terminal/aide.sh
+# Sessions agent isolées : utilisateur sans sudo ni identifiants (voir agent-session.sh)
+COPY agent-session-config.py agent-llm-nginx.conf agent-tinyproxy.conf /opt/onyxia-terminal/
+COPY --chmod=0755 agent-session.sh /usr/local/bin/agent-session
+RUN useradd --uid 2000 --user-group --create-home --shell /bin/bash agent
 COPY dotfiles/zshrc     ${HOME}/.zshrc
 COPY dotfiles/tmux.conf ${HOME}/.tmux.conf
 COPY dotfiles/bashrc-extra /tmp/bashrc-extra

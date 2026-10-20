@@ -19,6 +19,7 @@
 - `trz` / `tsz <fichier>` : envoyer / récupérer des fichiers via le navigateur.
 - Copier : sélection à la souris ; coller : Ctrl+V. Clic droit : menu du terminal (Maj+clic droit : menu du navigateur).
 - Tous les raccourcis : Alt+h ou le bouton [?] aide de la barre d'état.
+- `agent-session` : un agent IA isolé (sans identifiants, internet via un proxy à liste blanche).
 - Ctrl+W ferme l'onglet du navigateur : installez la page en application (menu du navigateur) pour libérer ces raccourcis.
 {{ end -}}
 {{ else }}
@@ -35,6 +36,7 @@
 - `trz` / `tsz <file>`: upload / download files through the browser.
 - Copy: select with the mouse; paste: Ctrl+V. Right-click: terminal menu (Shift+right-click: browser menu).
 - All shortcuts: Alt+h or the [?] aide button in the status bar.
+- `agent-session`: an isolated AI agent (no credentials, internet through an allowlist proxy).
 - Ctrl+W closes the browser tab: install the page as an app (browser menu) to free these shortcuts.
 {{ end -}}
 {{ end -}}

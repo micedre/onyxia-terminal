@@ -80,6 +80,8 @@ Le chart refuse de s'installer si l'application choisie n'est pas déclarée dan
 | Données Archi | `Archi.ini` réécrit : préférences, plugins et modèles dans `~/work/.archi` et `~/work/Archi` |
 | Xpra | version 6 du dépôt xpra.org (Ubuntu 24.04 ne fournit que la 3.1) |
 | Logs ttyd | `--debug 3` : le niveau par défaut écrit le mot de passe (base64) dans les logs |
+| Agents isolés | `agent-session` : utilisateur `agent` (uid 2000, sans sudo) + Landlock via landrun (fichiers : sa copie de travail et son dossier ; TCP sortant : ports 8888 et 4000 seulement) ; proxy tinyproxy à liste blanche (`~/work/agents/allow.txt`, journal par domaine) ; proxy nginx qui ajoute la clé LLM. Limites : filtrage TCP par port (pas par hôte), UDP/DNS non filtré, chemins HTTPS invisibles. Le montage de namespaces (bubblewrap) est refusé par le profil AppArmor des pods |
+| ttyd | écoute sur une socket unix privée (`/tmp/onyxia-terminal`, 700), pas sur un port local |
 
 ## Ce qui a été vérifié, et ce qui reste à vérifier
 

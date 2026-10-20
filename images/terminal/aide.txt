@@ -29,6 +29,19 @@
   Clic droit         menu du terminal (coller la dernière copie, diviser…)
   Maj+clic droit     menu du navigateur
 
+  Session agent isolée
+  ────────────────────
+  agent-session      opencode dans un onglet « agent:… » (clic droit aussi),
+                     sur une copie sans remote du dépôt courant
+                     (~/work/agents/<nom>), utilisateur « agent » : ni
+                     identifiants, ni sudo, ni accès à vos fichiers ; internet
+                     seulement via un proxy à liste blanche
+  agent-session log -f        voir les requêtes (domaines) et appels LLM
+  agent-session allow <dom.>  autoriser un domaine (deny pour retirer)
+  agent-session fetch <nom>   dans votre dépôt : récupérer ses commits
+  agent-session -- bash       un shell dans la session agent
+  Ne lancez pas son code dans votre session : il aurait vos identifiants.
+
   Fichiers
   ────────
   trz                envoyer des fichiers depuis l'ordinateur
