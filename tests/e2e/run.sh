@@ -2,7 +2,7 @@
 # Tests navigateur (Playwright, Chromium headless) contre une release Helm du
 # chart terminal déjà déployée (voir local/install.sh).
 #   tests/e2e/run.sh                 tous les tests
-#   tests/e2e/run.sh clip theme      certains tests (login clip xfer theme proxy)
+#   tests/e2e/run.sh clip theme      certains tests (login clip xfer theme proxy nvim-explorer)
 # Variables : RELEASE (défaut terminal-test), BASE (défaut : hôte de l'ingress),
 # OUT (captures d'écran, défaut : dossier temporaire).
 set -euo pipefail
@@ -19,7 +19,7 @@ OUT="${OUT:-$(mktemp -d)}"
 until curl -sf -o /dev/null "$BASE/login"; do sleep 3; done
 
 tests=("$@")
-[[ ${#tests[@]} -eq 0 ]] && tests=(login clip xfer theme proxy)
+[[ ${#tests[@]} -eq 0 ]] && tests=(login clip xfer theme proxy nvim-explorer)
 
 for t in "${tests[@]}"; do
     if [[ "$t" == proxy ]]; then

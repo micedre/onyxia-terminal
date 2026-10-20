@@ -43,7 +43,7 @@ local/                 (ignoré par git) valeurs et scripts de test personnels
 | Aide | **Alt+h**, bouton `[?] aide` ou clic droit → Aide : tous les raccourcis |
 | Fichiers | glisser-déposer sur la page (arrive dans le dossier du panneau actif, même si Neovim y tourne), boutons `[↑]` `[↓]` et clic droit (choix des fichiers à télécharger avec fzf), ou `trz` / `tsz <fichier>` ; seul `~/work` est conservé |
 | Applications web | un serveur lancé dans le terminal (`localhost:8000`) s'ouvre via `/proxy/8000/` (préfixe retiré) ou `/absproxy/8000/` (préfixe conservé), comme code-server ; cliquer sur l'URL affichée l'ouvre directement ; `ports` liste les ports en écoute et leurs liens |
-| Éditeur | Neovim 0.12 + LazyVim préinstallé (plugins et parseurs treesitter inclus, aucun téléchargement au lancement) ; `vi`/`vim` = `nvim`, `EDITOR=nvim` |
+| Éditeur | Neovim 0.12 + LazyVim préinstallé (plugins et parseurs treesitter inclus, aucun téléchargement au lancement), fichiers cachés (`.github`, `.gitignore`…) affichés dans l'explorateur et les recherches ; `vi`/`vim` = `nvim`, `EDITOR=nvim` |
 | IA | opencode configuré par le chart (bloc `ai`, mêmes réglages que les images datascience) |
 | **Agents isolés** | `agent-session` : agent IA sans identifiants, internet via un proxy à liste blanche journalisé, copie git sans remote — voir [docs/isolation-agents.md](docs/isolation-agents.md) |
 | Outils | uv/uvx, Quarto + Chrome headless (diagrammes Mermaid en docx/pdf), kubectl, helm, aws, git, fzf, zoxide, ripgrep, fd, bat, eza, btop, starship |

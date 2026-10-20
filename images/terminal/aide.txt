@@ -75,6 +75,7 @@
   Outils
   ──────
   nvim (vi, vim)     Neovim + LazyVim : Espace pour le menu, Espace e = fichiers
+                     (fichiers cachés affichés, H pour les masquer)
   uv, uvx            projets et environnements Python
   quarto             documents (Chrome headless inclus pour les diagrammes)
   opencode           assistant de code IA (si activé dans Onyxia)

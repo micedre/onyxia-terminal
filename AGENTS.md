@@ -54,6 +54,7 @@ Two derived images, `images/xpra` and `images/archi`, run a GUI app through Xpra
 | `images/terminal/themes.json` | the two xterm palettes (single source) |
 | `images/terminal/dotfiles/tmux.conf` | keybindings (Alt+…), status-bar buttons, French right-click menu, user keys, hooks |
 | `images/terminal/dotfiles/nvim-onyxia.lua` | appended to LazyVim's `options.lua`: OSC 52 clipboard, background from tmux `@theme` |
+| `images/terminal/dotfiles/nvim-plugins-onyxia.lua` | copied to `lua/plugins/onyxia.lua`: snacks explorer/files/grep show hidden files |
 | `images/terminal/aide.txt`, `aide.sh` | help popup (Alt+h, `[?]`) |
 | `images/terminal/transfert.sh` | trz/tsz in a temporary tmux pane (menu, `[↑]`/`[↓]`, drag-and-drop) |
 | `images/terminal/theme.sh` | `theme` command and tmux-side theme plumbing |
@@ -102,7 +103,7 @@ All three are refused by `/proxy`.
 2. Deploy with `bash local/install.sh` (`helm upgrade --install terminal-test chart/terminal -f local/values.yaml`, `pullPolicy: Always`).
    - If the pod spec didn't change, **delete the pod** to pull the new image: `kubectl delete pod terminal-test-0` (no `--wait=false`; otherwise `kubectl wait` matches the old pod).
    - Then wait for `curl -sf https://<host>/login`. The ingress lags a little after Ready.
-3. Run the browser tests with `tests/e2e/run.sh [login clip xfer theme proxy]`. It installs Playwright on first run, gets the password via `kubectl exec … printenv PASSWORD`, and gets the host from `helm get values`. Look at the screenshots it saves.
+3. Run the browser tests with `tests/e2e/run.sh [login clip xfer theme proxy nvim-explorer]`. It installs Playwright on first run, gets the password via `kubectl exec … printenv PASSWORD`, and gets the host from `helm get values`. Look at the screenshots it saves.
 4. Run quick checks inside the pod with `kubectl exec terminal-test-0 -c terminal -- bash -c '…'`.
    - To validate an nginx change before a CI build: `kubectl cp` the conf, `sed` the `__PORT__`/`__TOKEN__` placeholders, then `nginx -t -c …`.
 5. Run `helm uninstall terminal-test` at the end.
@@ -140,6 +141,7 @@ vscode-python compatibility: `local/install-vscode.sh` (release `vscode-term`, v
 | Feature | Files | Tests |
 |---|---|---|
 | Login, cookie | `login.html`, `nginx-terminal.conf`, `start.sh` | `login.mjs` |
+| Neovim explorer (dotfiles) | `nvim-plugins-onyxia.lua`, Dockerfile | `nvim-explorer.mjs` |
 | Clipboard, right-click, help | `terminal-page.js`, `tmux.conf`, `aide.*`, `nvim-onyxia.lua` | `clip.mjs` |
 | File transfers | `transfert.sh`, `tmux.conf` (User0, menu, `[↑]`/`[↓]`), `terminal-page.js` | `xfer.mjs` |
 | Theme | `themes.json`, `theme.sh`, `terminal-page.js`, `tmux.conf` (User1/2, hooks), `nvim-onyxia.lua`, `login.html` | `theme.mjs` |

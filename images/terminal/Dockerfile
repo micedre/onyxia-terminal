@@ -72,7 +72,7 @@ COPY --chmod=0755 code-server-shim.sh /usr/bin/code-server
 COPY nginx-terminal.conf /opt/nginx-terminal.conf
 COPY nginx-proxy-common.conf /opt/onyxia-terminal/
 COPY login.html /opt/login.html
-COPY terminal-page.js aide.txt themes.json dotfiles/nvim-onyxia.lua /opt/onyxia-terminal/
+COPY terminal-page.js aide.txt themes.json dotfiles/nvim-onyxia.lua dotfiles/nvim-plugins-onyxia.lua /opt/onyxia-terminal/
 COPY --chmod=0755 aide.sh transfert.sh theme.sh /opt/onyxia-terminal/
 COPY --chmod=0755 theme.sh /usr/local/bin/theme
 COPY --chmod=0755 ports.sh /usr/local/bin/ports
@@ -106,6 +106,7 @@ RUN quarto install chrome-headless-shell --no-prompt --quiet && \
 RUN git clone --depth 1 https://github.com/LazyVim/starter ${HOME}/.config/nvim && \
     rm -rf ${HOME}/.config/nvim/.git && \
     cat /opt/onyxia-terminal/nvim-onyxia.lua >> ${HOME}/.config/nvim/lua/config/options.lua && \
+    cp /opt/onyxia-terminal/nvim-plugins-onyxia.lua ${HOME}/.config/nvim/lua/plugins/onyxia.lua && \
     nvim --headless "+Lazy! sync" +qa && \
     nvim --headless \
         '+lua local p = require("lazy.core.config").plugins["nvim-treesitter"]; require("lazy").load({ plugins = { p } }); require("nvim-treesitter").install(require("lazy.core.plugin").values(p, "opts", false).ensure_installed):wait(600000)' \
