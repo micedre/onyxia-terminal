@@ -166,6 +166,9 @@ Le chart refuse de s'installer si l'application choisie n'est pas déclarée dan
 
 ## Ce qui a été vérifié
 
+Les tests navigateur sont dans `tests/e2e/` (Playwright) : `tests/e2e/run.sh` les lance
+contre la release `terminal-test` (voir `AGENTS.md`).
+
 Sur SSP Cloud (octobre 2026), avec les images construites par la CI :
 
 - chart `terminal` (`helm upgrade --install`) et chart `vscode-python` 2.6.6 avec l'image

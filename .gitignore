@@ -1,2 +1,3 @@
 local/
 chart/terminal/charts/
+tests/e2e/node_modules/

@@ -1,0 +1,9 @@
+{
+  "name": "onyxia-terminal-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Tests navigateur (Playwright) du terminal déployé sur un cluster Onyxia",
+  "dependencies": {
+    "playwright": "^1.64.1"
+  }
+}
