@@ -10,7 +10,7 @@
   Alt+z              zoomer / dézoomer le panneau
   Alt+w              fermer le panneau
   Alt+h              cette aide              (bouton [?] aide)
-  Ctrl+b             préfixe tmux : Ctrl+b puis d = détacher, [ = mode copie…
+  Ctrl+b             préfixe tmux : Ctrl+b puis d = détacher, [ = mode copie (touches vi)…
 
   La session survit à la fermeture de l'onglet : rouvrez le lien pour la
   retrouver.
@@ -18,7 +18,8 @@
   Copier / coller
   ───────────────
   Sélection souris   copie dans le presse-papiers (« Copié » s'affiche)
-  Double/triple clic copie le mot / la ligne
+  Double/triple clic copie le mot / la ligne (un mot va jusqu'aux espaces :
+                     mots de passe, URL, chemins sont copiés en entier)
   Ctrl+V             coller (aussi Maj+Inser, Ctrl+Maj+V)
   Maj+sélection      sélection du navigateur, sans tmux
   Neovim             y copie dans le presse-papiers, Ctrl+V colle

@@ -32,15 +32,29 @@ const at = (col, row) => ({ x: cell.x + (col + 0.5) * cell.w, y: cell.y + (row +
 await run("clear; printf '\\e]52;c;%s\\a' \"$(printf 'héllo osc52' | base64)\"");
 console.log("1. OSC52 -> clipboard:", JSON.stringify(await clip()));
 
-// 2. Sélection à la souris dans tmux
-await run("clear; echo SELECTME-ABCDEF");
+// 2. Sélection à la souris dans tmux : glisser jusqu'au dernier caractère
+// inclus, double clic sur un jeton base64 (+ / =), triple clic sur la ligne
+const TOKEN = "aGVs+bG8/d29y=bGQ=";
+await run(`clear; echo SELECTME-ABCDEF; echo 'pass: ${TOKEN} fin'`);
 const lines = (await buffer()).split("\n");
 const row = lines.findIndex(l => l.startsWith("SELECTME"));
 const a = at(0, row), b = at(14, row);
 await page.mouse.move(a.x, a.y); await page.mouse.down();
 await page.mouse.move(b.x, b.y, { steps: 8 }); await page.mouse.up();
 await page.waitForTimeout(1000);
-console.log("2. mouse drag -> clipboard:", JSON.stringify(await clip()));
+let got = await clip();
+console.log("2. mouse drag -> clipboard:", JSON.stringify(got), got === "SELECTME-ABCDEF" ? "OK" : "FAIL");
+const prow = lines.findIndex(l => l.startsWith("pass: "));
+const d = at(6 + 5, prow);   // au milieu du jeton
+await page.mouse.dblclick(d.x, d.y);
+await page.waitForTimeout(1000);
+got = await clip();
+console.log("   double click -> clipboard:", JSON.stringify(got), got === TOKEN ? "OK" : "FAIL");
+await page.mouse.click(d.x, d.y, { clickCount: 3 });
+await page.waitForTimeout(1000);
+got = (await clip()).trim();
+console.log("   triple click -> clipboard:", JSON.stringify(got), got === `pass: ${TOKEN} fin` ? "OK" : "FAIL");
+
 
 // 3. Ctrl+V colle le presse-papiers
 await setClip("echo PASTED-$((6*7))");

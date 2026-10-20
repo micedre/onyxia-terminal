@@ -32,6 +32,8 @@ for t in "${tests[@]}"; do
             up 8765 || (setsid nohup uv run -q /tmp/wsecho.py >/dev/null 2>&1 </dev/null &)
             for i in $(seq 40); do up 8000 && up 8765 && break; sleep 1; done' || true
     fi
+    # Session tmux neuve pour chaque test (ttyd la recrée à la connexion)
+    kubectl exec "$POD" -c terminal -- tmux kill-session -t main 2>/dev/null || true
     echo "== $t"
     node "$t.mjs" "$BASE" "$PASSWORD" "$OUT/$t"
 done

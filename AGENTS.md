@@ -103,7 +103,7 @@ All three are refused by `/proxy`.
 2. Deploy with `bash local/install.sh` (`helm upgrade --install terminal-test chart/terminal -f local/values.yaml`, `pullPolicy: Always`).
    - If the pod spec didn't change, **delete the pod** to pull the new image: `kubectl delete pod terminal-test-0` (no `--wait=false`; otherwise `kubectl wait` matches the old pod).
    - Then wait for `curl -sf https://<host>/login`. The ingress lags a little after Ready.
-3. Run the browser tests with `tests/e2e/run.sh [login clip xfer theme proxy nvim-explorer]`. It installs Playwright on first run, gets the password via `kubectl exec … printenv PASSWORD`, and gets the host from `helm get values`. Look at the screenshots it saves.
+3. Run the browser tests with `tests/e2e/run.sh [login clip xfer theme proxy nvim-explorer]`. Each test starts from a fresh tmux session `main` (killed before each test). It installs Playwright on first run, gets the password via `kubectl exec … printenv PASSWORD`, and gets the host from `helm get values`. Look at the screenshots it saves.
 4. Run quick checks inside the pod with `kubectl exec terminal-test-0 -c terminal -- bash -c '…'`.
    - To validate an nginx change before a CI build: `kubectl cp` the conf, `sed` the `__PORT__`/`__TOKEN__` placeholders, then `nginx -t -c …`.
 5. Run `helm uninstall terminal-test` at the end.
@@ -127,6 +127,7 @@ vscode-python compatibility: `local/install-vscode.sh` (release `vscode-term`, v
 - **tmux 3.4:**
   - `display-menu` needs `-O`, or the menu closes on button release;
   - right-click menu keys in use: h p m e r t a d b z x.
+- **tmux copy:** `mode-keys` defaults to emacs here (tmux starts before zsh exports `EDITOR`), and an emacs selection excludes the cell under the mouse, so dragging dropped the last character. The default `word-separators` (all punctuation) cut double-clicked base64 tokens. Both are set in `tmux.conf`, and `clip.mjs` asserts them.
 - **Shortcuts:** Alt+c is fzf's cd widget, so don't bind it (theme is Alt+m). Browser-reserved keys (Ctrl+W/T) are why everything uses Alt.
 - **Neovim / tokyonight:** setting `background=light` before the colorscheme loads is overridden. `nvim-onyxia.lua` applies it on `VimEnter`. Running instances are updated via `nvim --server <sock> --remote-expr`.
 - **SSP Cloud pods:**
