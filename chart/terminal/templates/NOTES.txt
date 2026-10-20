@@ -16,7 +16,7 @@
 - La page de connexion demande seulement le mot de passe ci-dessus ; `/logout` pour se déconnecter.
 - La session tmux `main` survit à la fermeture de l'onglet : rouvrez le lien pour la retrouver.
 - Plusieurs shells dans le même onglet : Alt+t (nouvel onglet tmux), Alt+Entrée / Alt+- (découper), ou les boutons [+] [⫼] [⊟] de la barre d'état.
-- `trz` / `tsz <fichier>` : envoyer / récupérer des fichiers via le navigateur.
+- Fichiers : glissez-les sur la page pour les envoyer, ou utilisez les boutons [↑] [↓] de la barre d'état (aussi dans le clic droit, ou `trz` / `tsz <fichier>`). Chrome ou Edge requis pour choisir / télécharger.
 - Copier : sélection à la souris ; coller : Ctrl+V. Clic droit : menu du terminal (Maj+clic droit : menu du navigateur).
 - Tous les raccourcis : Alt+h ou le bouton [?] aide de la barre d'état.
 - `agent-session` : un agent IA isolé (sans identifiants, internet via un proxy à liste blanche).
@@ -33,7 +33,7 @@
 - The login page only asks for the password above; `/logout` to sign out.
 - The tmux session `main` survives closing the tab: reopen the link to get it back.
 - Several shells in one tab: Alt+t (new tmux tab), Alt+Enter / Alt+- (split), or the [+] [⫼] [⊟] buttons in the status bar.
-- `trz` / `tsz <file>`: upload / download files through the browser.
+- Files: drop them on the page to upload, or use the [↑] [↓] status-bar buttons (also in the right-click menu, or `trz` / `tsz <file>`). Chrome or Edge needed to pick / download.
 - Copy: select with the mouse; paste: Ctrl+V. Right-click: terminal menu (Shift+right-click: browser menu).
 - All shortcuts: Alt+h or the [?] aide button in the status bar.
 - `agent-session`: an isolated AI agent (no credentials, internet through an allowlist proxy).

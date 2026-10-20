@@ -44,8 +44,14 @@
 
   Fichiers
   ────────
-  trz                envoyer des fichiers depuis l'ordinateur
-  tsz <fichier>      télécharger un fichier vers l'ordinateur
+  Glisser-déposer    déposer des fichiers sur la page : ils arrivent dans
+                     le dossier du panneau actif (même si vim y tourne)
+  [↑] / clic droit   « Envoyer des fichiers ici » : choisir les fichiers
+  [↓] / clic droit   « Télécharger des fichiers… » : choisir avec fzf
+                     (Tab pour en sélectionner plusieurs)
+  trz / tsz <fich.>  la même chose en ligne de commande (-d : dossiers)
+  Le choix de fichiers et le téléchargement demandent Chrome ou Edge ;
+  Firefox permet seulement le glisser-déposer.
   ~/work             seul dossier conservé au redémarrage
 
   Outils

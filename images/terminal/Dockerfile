@@ -72,7 +72,7 @@ COPY --chmod=0755 code-server-shim.sh /usr/bin/code-server
 COPY nginx-terminal.conf /opt/nginx-terminal.conf
 COPY login.html /opt/login.html
 COPY terminal-page.js aide.txt dotfiles/nvim-clipboard.lua /opt/onyxia-terminal/
-COPY --chmod=0755 aide.sh /opt/onyxia-terminal/aide.sh
+COPY --chmod=0755 aide.sh transfert.sh /opt/onyxia-terminal/
 # Sessions agent isolées : utilisateur sans sudo ni identifiants (voir agent-session.sh)
 COPY agent-session-config.py agent-llm-nginx.conf agent-tinyproxy.conf /opt/onyxia-terminal/
 COPY --chmod=0755 agent-session.sh /usr/local/bin/agent-session

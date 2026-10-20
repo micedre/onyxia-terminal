@@ -41,7 +41,7 @@ local/                 (ignoré par git) valeurs et scripts de test personnels
 | Copier / coller | sélection à la souris = copie dans le presse-papiers du navigateur (OSC 52, aussi depuis Neovim), double/triple clic = mot/ligne ; **Ctrl+V** colle |
 | Clic droit | menu tmux en français (aide, coller, onglets, découpage, session agent) ; Maj+clic droit = menu du navigateur |
 | Aide | **Alt+h**, bouton `[?] aide` ou clic droit → Aide : tous les raccourcis |
-| Fichiers | `trz` / `tsz <fichier>` : envoyer / récupérer via le navigateur ; seul `~/work` est conservé |
+| Fichiers | glisser-déposer sur la page (arrive dans le dossier du panneau actif, même si Neovim y tourne), boutons `[↑]` `[↓]` et clic droit (choix des fichiers à télécharger avec fzf), ou `trz` / `tsz <fichier>` ; seul `~/work` est conservé |
 | Éditeur | Neovim 0.12 + LazyVim préinstallé (plugins et parseurs treesitter inclus, aucun téléchargement au lancement) ; `vi`/`vim` = `nvim`, `EDITOR=nvim` |
 | IA | opencode configuré par le chart (bloc `ai`, mêmes réglages que les images datascience) |
 | **Agents isolés** | `agent-session` : agent IA sans identifiants, internet via un proxy à liste blanche journalisé, copie git sans remote — voir [docs/isolation-agents.md](docs/isolation-agents.md) |
@@ -149,6 +149,7 @@ Le chart refuse de s'installer si l'application choisie n'est pas déclarée dan
 | Sondes | `tcpSocket` dans le chart ; `/` répond 200 (page qui renvoie vers `terminal/`) pour les sondes HTTP du chart vscode-python, qui suivent les redirections |
 | Page du terminal | page d'index de ttyd enrichie au démarrage : police intégrée (data URI), police d'icônes, script `terminal-page.js` (nouvelle mesure des cellules après chargement des polices, OSC 52, Ctrl+V, clic droit) |
 | Liste des polices | passée à ttyd en chaîne JSON : ttyd lit les options avec json-c, qui sinon ne garde que le premier nom entre apostrophes |
+| Transferts (trzsz) | chaque transfert s'ouvre dans un panneau tmux temporaire (`transfert.sh`) ; au dépôt, trzsz.js envoie Ctrl+C puis `trz` au panneau actif : `terminal-page.js` remplace ce Ctrl+C par une touche tmux (`User0`) qui ouvre le panneau de réception, où arrive le `trz` |
 | Menu du clic droit | `display-menu -O` : sans cette option, le relâchement du bouton (~100 ms après le clic) ferme le menu aussitôt |
 | Neovim | archive officielle (celle d'Ubuntu 24.04 est trop ancienne pour LazyVim) ; presse-papiers en OSC 52, collage depuis le registre (lire le presse-papiers en OSC 52 bloquerait sous tmux) |
 | opencode | script d'installation d'onyxia-base ; en CI, jeton GitHub passé en secret de build (évite la limite d'API anonyme) ; configuration montée par le chart (`library-chart.secretOpencode`) |
@@ -190,6 +191,8 @@ uniquement via Helm), Firefox (les tests navigateur sont faits avec Chromium).
 - Ctrl+V colle au lieu d'être transmis : dans Neovim, Ctrl+Q remplace Ctrl+V pour la
   sélection en bloc.
 - La page de connexion exige HTTPS (ou `localhost`).
+- Transferts : choisir des fichiers à envoyer et télécharger demandent Chrome ou Edge
+  (API File System Access, utilisée par trzsz.js) ; Firefox permet seulement le glisser-déposer.
 - Agents isolés : filtrage réseau par port et non par hôte, UDP/DNS non filtré, seuls
   les noms de domaine sont visibles (voir la doc dédiée).
 - Rendu graphique logiciel (pas de GPU) : parfait pour Archi, lent pour la 3D.
