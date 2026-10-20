@@ -171,6 +171,9 @@ Sur SSP Cloud (octobre 2026), avec les images construites par la CI :
   passe → terminal, WebSocket, `/logout` ; tests automatisés dans Chromium (Playwright) ;
 - copier (sélection, OSC 52, Neovim), coller (Ctrl+V), menu du clic droit, aide (Alt+h,
   bouton `[?]`) : tests automatisés dans Chromium ;
+- transferts : glisser-déposer (dans un shell et pendant que Neovim tourne), menu et
+  boutons `[↑]` `[↓]`, téléchargement via fzf ; tests automatisés dans Chromium
+  (sélecteurs de fichiers simulés) ;
 - polices et icônes Nerd Font (captures d'écran du prompt et de LazyVim) ;
 - Neovim 0.12.6 + LazyVim : 32 plugins et 27 parseurs treesitter présents, aucun
   téléchargement au lancement ;
