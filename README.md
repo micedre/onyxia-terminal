@@ -222,65 +222,46 @@ Le chart refuse de s'installer si l'application choisie n'est pas déclarée dan
 
 ## Choix techniques
 
-| Sujet | Choix |
-|---|---|
-| Un seul port | nginx écoute sur 7681 (8080 avec le chart vscode-python), devant ttyd ou Xpra : même ingress, mêmes sondes quel que soit le mode |
-| Frontal application | nginx sert lui-même le client HTML5 d'Xpra (fichiers `.gz` précompressés) et ne passe à Xpra (`127.0.0.1:14500`, avec son mot de passe) que le WebSocket : servis par Xpra (en brotli), une partie des fichiers revenait en 502 dans le navigateur d'un utilisateur, d'où des erreurs `XpraClient is not defined` |
-| Authentification terminal | page de connexion servie par nginx ; le cookie vaut SHA-256(sel:mot de passe), le sel étant tiré à chaque démarrage (le mot de passe n'est stocké ni dans le cookie ni dans la configuration) ; la page exige HTTPS (WebCrypto) |
-| Authentification application | Xpra `auth=env,name=PASSWORD,verify-username=no` (défi HMAC, le mot de passe ne circule pas en clair) |
-| ttyd | écoute sur une socket unix privée (`/tmp/onyxia-terminal`, 700) et non sur un port local : ni le pod ni une session agent ne peuvent l'atteindre sans passer par nginx |
-| Sondes | `tcpSocket` dans le chart ; `/` répond 200 (page qui renvoie vers `terminal/`) pour les sondes HTTP du chart vscode-python, qui suivent les redirections |
-| Page du terminal | page d'index de ttyd enrichie au démarrage : police intégrée (data URI), police d'icônes, script `terminal-page.js` (nouvelle mesure des cellules après chargement des polices, OSC 52, Ctrl+V, clic droit) |
-| Liste des polices | passée à ttyd en chaîne JSON : ttyd lit les options avec json-c, qui sinon ne garde que le premier nom entre apostrophes |
-| Transferts (trzsz) | chaque transfert s'ouvre dans un panneau tmux temporaire (`transfert.sh`) ; au dépôt, trzsz.js envoie Ctrl+C puis `trz` au panneau actif : `terminal-page.js` remplace ce Ctrl+C par une touche tmux (`User0`) qui ouvre le panneau de réception, où arrive le `trz` |
-| Thème | palettes dans `themes.json` ; tmux demande le changement à la page par une séquence privée (`OSC 7777`, écrite sur le terminal du client), la page répond par une touche (`User1`/`User2`) qui fixe `@theme` dans tmux et passe `set background` aux Neovim ouverts (`nvim --server`) |
-| Proxy des ports | nginx : `/proxy/PORT/` et `/absproxy/PORT/` vers `127.0.0.1:PORT` (repli sur `[::1]`), même cookie que le terminal, WebSocket, réécriture des redirections ; ports du frontal et des proxys agent interdits ; les liens `http://localhost:PORT` cliqués dans le terminal sont réécrits par `terminal-page.js` (enveloppe de `window.open`) |
-| Menu du clic droit | `display-menu -O` : sans cette option, le relâchement du bouton (~100 ms après le clic) ferme le menu aussitôt |
-| Neovim | archive officielle (celle d'Ubuntu 24.04 est trop ancienne pour LazyVim) ; presse-papiers en OSC 52, collage depuis le registre (lire le presse-papiers en OSC 52 bloquerait sous tmux) |
-| opencode | script d'installation d'onyxia-base ; en CI, jeton GitHub passé en secret de build (évite la limite d'API anonyme) ; configuration montée par le chart (`library-chart.secretOpencode`) |
-| Dépôt git du formulaire | `onyxia-init.sh` (onyxia-base) ne clone `git.repository` que si un jeton git est renseigné ; sans jeton, `start.sh` clone lui-même le dépôt (public) |
-| zsh et scripts d'init | `~/.bashrc` porte un marqueur de fin de configuration ; `~/.zshrc` source ce que les scripts d'init ajoutent après |
-| Agents isolés | utilisateur `agent` + Landlock (landrun) + tinyproxy + proxy de clé LLM ; bubblewrap écarté car le profil AppArmor des pods interdit les montages — détail dans [docs/isolation-agents.md](docs/isolation-agents.md) |
-| Démarrage de l'application | `--start-child-after-connect` : à la première connexion, une fois l'écran virtuel ajusté au navigateur (sinon JDemetra+ s'ouvrait en 7376×3720) |
-| Fin de l'application | `--exit-with-children` : fermer l'application arrête le conteneur, Kubernetes le relance |
-| Verrouillage | `--start-new-commands=no` : l'utilisateur ne peut lancer que l'application prévue |
-| Données Archi | `Archi.ini` réécrit : préférences, plugins et modèles dans `~/work/.archi` et `~/work/Archi` |
-| JDemetra+ | archive « standalone » officielle (JRE 21 inclus) ; `--userdir ~/work/.jdemetra/userdir`, cache dans `/tmp` |
-| Orange | `orange3` + PyQt6 dans un environnement uv séparé (`/opt/orange`), pour ne pas toucher aux projets de l'utilisateur ; réglages et extensions dans `~/work/.orange` (`XDG_DATA_HOME`, `XDG_CONFIG_HOME`) ; aide en ligne (QtWebEngine) sans GPU ni bac à sable |
-| Xpra | version 6 du dépôt xpra.org (Ubuntu 24.04 ne fournit que la 3.1) |
-| Logs ttyd | `--debug 3` : le niveau par défaut écrit des identifiants dans les logs |
+**Un seul port, nginx en frontal.** Dans les deux modes, nginx écoute sur le port du
+service (7681, ou 8080 avec le chart vscode-python) : même ingress, mêmes sondes, et le
+mot de passe du service Onyxia protège tout.
 
-## Ce qui a été vérifié
+```
+navigateur ─HTTPS─▶ ingress ─▶ nginx :7681 ─┬─▶ ttyd ─▶ tmux ─▶ zsh     (terminal)
+                                            └─▶ Xpra ─▶ application   (application)
+```
 
-Les tests navigateur sont dans `tests/e2e/` (Playwright) : `tests/e2e/run.sh` les lance
-contre la release `terminal-test` (voir `AGENTS.md`).
+**Mode terminal.** Après la page de connexion (cookie), nginx passe à ttyd, joignable
+seulement par une socket unix privée. ttyd rattache le navigateur à la session tmux
+`main`, qui survit à la fermeture de l'onglet. La page de ttyd est enrichie au
+démarrage : polices, presse-papiers, clic droit, glisser-déposer de fichiers, thème.
+nginx expose aussi les serveurs web lancés dans le terminal (`/proxy/PORT/`), et
+`agent-session` isole les agents IA ([docs/isolation-agents.md](docs/isolation-agents.md)).
 
-Sur SSP Cloud (octobre 2026), avec les images construites par la CI :
+**Mode application.** nginx sert le client HTML5 d'Xpra et ne passe à Xpra (local,
+protégé par le mot de passe) que le WebSocket. Xpra fait tourner un écran X virtuel avec
+une seule application, lancée à la première connexion ; la fermer redémarre le
+conteneur. Les données de l'application sont redirigées vers `~/work`.
 
-- chart `terminal` (`helm upgrade --install`) et chart `vscode-python` 2.6.6 avec l'image
-  personnalisée : pod prêt, ingress, terminal fonctionnel ;
-- page de connexion : redirection sans cookie, mauvais mot de passe signalé, bon mot de
-  passe → terminal, WebSocket, `/logout` ; tests automatisés dans Chromium (Playwright) ;
-- copier (sélection, OSC 52, Neovim), coller (Ctrl+V), menu du clic droit, aide (Alt+h,
-  bouton `[?]`) : tests automatisés dans Chromium ;
-- transferts : glisser-déposer (dans un shell et pendant que Neovim tourne), menu et
-  boutons `[↑]` `[↓]`, téléchargement via fzf ; tests automatisés dans Chromium
-  (sélecteurs de fichiers simulés) ;
-- polices et icônes Nerd Font (captures d'écran du prompt et de LazyVim) ;
-- Neovim 0.12.6 + LazyVim : 32 plugins et 27 parseurs treesitter présents, aucun
-  téléchargement au lancement ;
-- uv 0.13, `uvx` ; Quarto 1.10 : `quarto check` OK, rendu docx d'un diagramme Mermaid ;
-- opencode configuré par le chart, requêtes réelles vers le LLM de SSP Cloud ;
-- `agent-session` : contrôles d'isolation détaillés dans
-  [docs/isolation-agents.md](docs/isolation-agents.md#vérifications) ;
-- Archi 5.10 sous Xpra 6 : affichage, authentification, données dans `~/work`.
-- JDemetra+ 3.9 et Orange 3.40 sous Xpra 6, avec le chart `terminal` et avec le chart
-  `vscode-python` (image personnalisée) : pod prêt (sondes HTTP), mot de passe, fenêtre
-  de l'application à la taille du navigateur, données dans `~/work`, redémarrage
-  après fermeture de l'application ; test automatisé `tests/e2e/run.sh app`.
+**Briques utilisées :**
 
-Non vérifié : le formulaire Onyxia du chart `terminal` publié dans un catalogue (testé
-uniquement via Helm), Firefox (les tests navigateur sont faits avec Chromium).
+- socle : [Onyxia](https://github.com/InseeFrLab/onyxia), image
+  [onyxia-base](https://github.com/InseeFrLab/images-datascience),
+  [library-chart](https://github.com/InseeFrLab/helm-charts-interactive-services) ;
+- terminal : [ttyd](https://github.com/tsl0922/ttyd), [tmux](https://github.com/tmux/tmux),
+  [zsh](https://www.zsh.org/), [nginx](https://nginx.org/), [trzsz](https://trzsz.github.io/),
+  [Neovim](https://neovim.io/) + [LazyVim](https://www.lazyvim.org/),
+  [starship](https://starship.rs/), [fzf](https://github.com/junegunn/fzf),
+  [uv](https://github.com/astral-sh/uv), [Quarto](https://quarto.org/),
+  [opencode](https://opencode.ai/) ;
+- agents : [Landlock](https://landlock.io/) via [landrun](https://github.com/Zouuup/landrun),
+  [tinyproxy](https://tinyproxy.github.io/) ;
+- applications : [Xpra](https://xpra.org/) et son client
+  [xpra-html5](https://github.com/Xpra-org/xpra-html5),
+  [JDemetra+](https://github.com/jdemetra/jdplus-main),
+  [Orange](https://orangedatamining.com/), [Archi](https://www.archimatetool.com/).
+
+Le détail des choix et leurs raisons : [AGENTS.md](AGENTS.md#technical-choices).
 
 ## Limites connues
 
@@ -301,7 +282,6 @@ uniquement via Helm), Firefox (les tests navigateur sont faits avec Chromium).
 - Rendu graphique logiciel (pas de GPU) : convient à Archi, JDemetra+ et Orange, lent pour la 3D.
 - Prévoir au moins 2 Go de mémoire en mode application (JVM + Xpra), davantage pour
   de gros jeux de données dans Orange.
-- Tau-Argus (secret statistique) n'est pas proposé : il n'existe que pour Windows.
 - L'URL de téléchargement d'Archi (`archimatetool/archi.io`, tag `5.10`) change à chaque
   version : à mettre à jour dans `images/archi/Dockerfile`.
 - Images x86_64 uniquement.

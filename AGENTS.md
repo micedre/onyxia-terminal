@@ -71,7 +71,7 @@ adjustment) and `images/orange` (Orange Data Mining). Each app image sets
 | `docs/isolation-agents.md` | agent isolation: threat model, options studied, architecture, limits |
 | `.github/workflows/` | builds and pushes images on push to `main` (tags `latest`, `sha-xxxxxxx`) and on `v*` tags |
 
-## Runtime architecture (terminal mode)
+## Runtime architecture
 
 ```
 browser ──HTTPS──▶ ingress ──▶ nginx :7681 ──cookie ok──▶ /terminal/ → ttyd (unix socket /tmp/onyxia-terminal/ttyd.sock, dir 700)
@@ -97,6 +97,45 @@ ttyd → tmux session "main" → zsh
 - 7681 / `$PORT`: the front.
 
 All three are refused by `/proxy`.
+
+## Technical choices
+
+Rationale behind non-obvious implementation choices (the README only gives an overview).
+
+| Topic | Choice |
+|---|---|
+| **Front & auth** | |
+| Single port | nginx listens on 7681 (8080 under vscode-python), in front of ttyd or Xpra: same ingress and probes in both modes |
+| Terminal auth | login page served by nginx; cookie = SHA-256(salt:password), salt drawn at each start (the password is stored neither in the cookie nor in the config); the page requires HTTPS (WebCrypto) |
+| ttyd socket | ttyd listens on a private unix socket (`/tmp/onyxia-terminal`, 700), not a local port: neither the pod nor an agent session can reach it without going through nginx |
+| Probes | `tcpSocket` in our chart; `/` returns 200 (a page pointing to `terminal/`) for vscode-python's HTTP probes, which follow redirects |
+| ttyd logs | `--debug 3`: the default level writes credentials to the logs |
+| Port proxy | nginx `/proxy/PORT/` and `/absproxy/PORT/` → `127.0.0.1:PORT` (fallback `[::1]`), same cookie as the terminal, WebSocket, redirect rewriting; the front and agent proxy ports are refused; `http://localhost:PORT` links clicked in the terminal are rewritten by `terminal-page.js` (`window.open` wrapper) |
+| **Terminal page** | |
+| Enriched index | ttyd's index page is rebuilt at start: embedded font (data URI), Nerd Font icons, `terminal-page.js` (cell re-measure after fonts load, OSC 52, Ctrl+V, right-click) |
+| Font list | passed to ttyd as a JSON string: ttyd parses options with json-c, which otherwise keeps only the first quoted name |
+| **tmux features** | |
+| Transfers (trzsz) | each transfer opens in a temporary tmux pane (`transfert.sh`); on drop, trzsz.js sends Ctrl+C then `trz` to the active pane, so `terminal-page.js` replaces that Ctrl+C with a tmux key (`User0`) that opens the receiving pane, where `trz` lands |
+| Theme | palettes in `themes.json`; tmux asks the page via a private sequence (`OSC 7777`, written to the client tty), the page answers with a key (`User1`/`User2`) that sets `@theme` in tmux and sends `set background` to running Neovims (`nvim --server`) |
+| Right-click menu | `display-menu -O`: without it, the button release (~100 ms after the click) closes the menu at once |
+| **Tools** | |
+| Neovim | official archive (Ubuntu 24.04's is too old for LazyVim); OSC 52 clipboard, paste from the register (reading the clipboard via OSC 52 would block under tmux) |
+| opencode | onyxia-base install script; in CI, GitHub token passed as a build secret (avoids the anonymous API limit); config mounted by the chart (`library-chart.secretOpencode`) |
+| **Init** | |
+| Git repository from the form | `onyxia-init.sh` (onyxia-base) only clones `git.repository` when a git token is set; without one, `start.sh` clones the (public) repo itself |
+| zsh and init scripts | `~/.bashrc` carries an end-of-config marker; `~/.zshrc` sources what init scripts append after it |
+| **Agents** | |
+| Isolated agents | `agent` user + Landlock (landrun) + tinyproxy + LLM key proxy; bubblewrap rejected because the pods' AppArmor profile denies mounts; see `docs/isolation-agents.md` |
+| **Application mode** | |
+| Application front | nginx serves Xpra's HTML5 client itself (precompressed `.gz`) and passes only the WebSocket to Xpra (`127.0.0.1:14500`, password auth): served by Xpra (brotli), part of the files came back as 502 in a user's browser (`XpraClient is not defined`) |
+| Application auth | Xpra `auth=env,name=PASSWORD,verify-username=no` (HMAC challenge, the password never travels in clear) |
+| App start | `--start-child-after-connect`: at the first connection, once the virtual screen matches the browser (otherwise JDemetra+ opened at 7376×3720) |
+| App exit | `--exit-with-children`: closing the app stops the container, Kubernetes restarts it |
+| Lock-down | `--start-new-commands=no`: the user can only run the intended app |
+| Xpra | version 6 from the xpra.org repo (Ubuntu 24.04 only ships 3.1) |
+| Archi data | `Archi.ini` rewritten: preferences, plugins and models in `~/work/.archi` and `~/work/Archi` |
+| JDemetra+ | official standalone archive (bundled JRE 21); `--userdir ~/work/.jdemetra/userdir`, cache in `/tmp` |
+| Orange | `orange3` + PyQt6 in a separate uv env (`/opt/orange`), to keep user projects untouched; settings and add-ons in `~/work/.orange` (`XDG_DATA_HOME`, `XDG_CONFIG_HOME`); online help (QtWebEngine) without GPU or sandbox |
 
 ## Dev / test loop
 
@@ -162,7 +201,9 @@ vscode-python compatibility: `local/install-vscode.sh` (release `vscode-term`, v
 | Agent isolation | `agent-session.sh`, `agent-*.conf`, `agent-session-config.py`, Dockerfile (`agent` user, landrun, tinyproxy) | manual checks, see `docs/isolation-agents.md#vérifications` |
 
 When adding a feature, update `aide.txt`, `chart/terminal/templates/NOTES.txt` (FR and EN),
-and `README.md` (features table, "Choix techniques", "Ce qui a été vérifié", "Limites").
+`README.md` (features table, "Ce qui a été vérifié", "Limites"; the "Choix techniques"
+brick list only if a new building block is added), and the "Technical choices" table above
+for any non-obvious choice.
 
 ## Open ideas / known gaps
 
