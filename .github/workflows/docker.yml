@@ -51,7 +51,7 @@ jobs:
           cache-from: type=gha,scope=terminal
           cache-to: type=gha,mode=max,scope=terminal
 
-      # xpra and archi need their parent image pulled from the registry,
+      # xpra and the app images need their parent image pulled from the registry,
       # so they are only built when pushing (not on pull requests).
       - name: Build and push onyxia-xpra
         if: env.PUSH == 'true'
@@ -80,3 +80,31 @@ jobs:
             ${{ env.REGISTRY }}/onyxia-app-archi:${{ env.SHA_TAG }}
           cache-from: type=gha,scope=archi
           cache-to: type=gha,mode=max,scope=archi
+
+      - name: Build and push onyxia-app-jdemetra
+        if: env.PUSH == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: images/jdemetra
+          platforms: linux/amd64
+          push: true
+          build-args: BASE_IMAGE=${{ env.REGISTRY }}/onyxia-xpra:${{ env.VERSION }}
+          tags: |
+            ${{ env.REGISTRY }}/onyxia-app-jdemetra:${{ env.VERSION }}
+            ${{ env.REGISTRY }}/onyxia-app-jdemetra:${{ env.SHA_TAG }}
+          cache-from: type=gha,scope=jdemetra
+          cache-to: type=gha,mode=max,scope=jdemetra
+
+      - name: Build and push onyxia-app-orange
+        if: env.PUSH == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: images/orange
+          platforms: linux/amd64
+          push: true
+          build-args: BASE_IMAGE=${{ env.REGISTRY }}/onyxia-xpra:${{ env.VERSION }}
+          tags: |
+            ${{ env.REGISTRY }}/onyxia-app-orange:${{ env.VERSION }}
+            ${{ env.REGISTRY }}/onyxia-app-orange:${{ env.SHA_TAG }}
+          cache-from: type=gha,scope=orange
+          cache-to: type=gha,mode=max,scope=orange

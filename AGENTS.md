@@ -16,8 +16,11 @@ as a custom image for the official `vscode-python` chart. In the browser it give
   `/proxy/PORT/` for local web servers;
 - `agent-session`: isolated AI agent sessions (separate user + Landlock + an allowlist proxy).
 
-Two derived images, `images/xpra` and `images/archi`, run a GUI app through Xpra
-(application mode of the chart). They have seen little work recently.
+Derived images run one desktop app through Xpra (application mode of the chart):
+`images/xpra` (base), then `images/archi`, `images/jdemetra` (JDemetra+, seasonal
+adjustment) and `images/orange` (Orange Data Mining). Each app image sets
+`LAUNCH_MODE`/`APP_COMMAND` itself, so it also starts under the vscode-python chart
+(custom image, via the `code-server` shim).
 
 ## Conventions
 
@@ -60,7 +63,9 @@ Two derived images, `images/xpra` and `images/archi`, run a GUI app through Xpra
 | `images/terminal/theme.sh` | `theme` command and tmux-side theme plumbing |
 | `images/terminal/ports.sh` | `ports` command (listening ports + `/proxy` links) |
 | `images/terminal/agent-session.sh` (+ `agent-*.conf`, `agent-session-config.py`) | isolated agent sessions |
-| `images/terminal/code-server-shim.sh` | fake `code-server` so the vscode-python chart starts the terminal |
+| `images/terminal/code-server-shim.sh` | fake `code-server` so the vscode-python chart starts the terminal (or the image's app) |
+| `images/xpra/` | Xpra 6 + HTML5 client on top of onyxia-terminal; `ENV LAUNCH_MODE=application` |
+| `images/{archi,jdemetra,orange}/` | one app each: Dockerfile + `*-launcher.sh` (redirects the app's data to `~/work`), `ENV APP_COMMAND` |
 | `chart/terminal/` | Helm chart (library-chart dependency; `values.schema.json` drives the Onyxia form; `templates/NOTES.txt` gives tips in FR/EN) |
 | `tests/e2e/` | Playwright browser tests run against a deployed release (`run.sh`) |
 | `docs/isolation-agents.md` | agent isolation: threat model, options studied, architecture, limits |
@@ -147,6 +152,7 @@ vscode-python compatibility: `local/install-vscode.sh` (release `vscode-term`, v
 | File transfers | `transfert.sh`, `tmux.conf` (User0, menu, `[↑]`/`[↓]`), `terminal-page.js` | `xfer.mjs` |
 | Theme | `themes.json`, `theme.sh`, `terminal-page.js`, `tmux.conf` (User1/2, hooks), `nvim-onyxia.lua`, `login.html` | `theme.mjs` |
 | Port proxy | `nginx-terminal.conf`, `nginx-proxy-common.conf`, `ports.sh`, `terminal-page.js`, `login.html` (`?next=`), chart `TERMINAL_URL` | `proxy.mjs` |
+| Desktop apps (Xpra) | `images/xpra`, `images/<app>/`, `start.sh` (`start_application`), chart `apps`/`launcher`, schema `launcher.app.listEnum`, CI steps, `images/build.sh` | manual: deploy, screenshot of the Xpra client (terminal chart and vscode-python) |
 | Agent isolation | `agent-session.sh`, `agent-*.conf`, `agent-session-config.py`, Dockerfile (`agent` user, landrun, tinyproxy) | manual checks, see `docs/isolation-agents.md#vérifications` |
 
 When adding a feature, update `aide.txt`, `chart/terminal/templates/NOTES.txt` (FR and EN),
@@ -159,4 +165,5 @@ and `README.md` (features table, "Choix techniques", "Ce qui a été vérifié",
 - **Theme:** with several tabs open, only the tab where the toggle happened remembers the choice.
 - **Agent isolation evolutions:** listed at the end of `docs/isolation-agents.md`: mitmproxy for HTTPS paths, a separate agent pod (git flow designed there), LLM quotas.
 - **os-factory/har** was evaluated. It provides workflow isolation (worktrees, verify evidence), not security isolation, and relies on Docker (absent in pods). It could only complement `agent-session`, used inside an agent workspace; not integrated.
+- **Tau-Argus** was asked for: it is Windows-only (Java GUI over Windows DLLs, no maintained Linux build). Wine was offered and refused, so it is not packaged.
 - No version tag has been cut yet; `v*` tags would publish versioned images.

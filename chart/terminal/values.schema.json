@@ -79,11 +79,13 @@
         },
         "app": {
           "title": "Application",
-          "description": "archi: ArchiMate modelling tool",
+          "description": "archi: ArchiMate modelling tool / jdemetra: seasonal adjustment (JDemetra+) / orange: visual data mining and machine learning (Orange)",
           "type": "string",
           "default": "archi",
           "listEnum": [
-            "archi"
+            "archi",
+            "jdemetra",
+            "orange"
           ],
           "render": "list",
           "hidden": {

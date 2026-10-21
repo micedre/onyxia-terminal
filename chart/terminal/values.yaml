@@ -22,12 +22,22 @@ launcher:
   app: "archi"
 
 # Catalogue des applications graphiques (non affiché dans l'UI).
+# name : nom affiché dans les notes du service.
 # Pour en ajouter une : construire son image à partir de onyxia-xpra, ajouter
 # une entrée ici et sa clé dans launcher.app.listEnum du values.schema.json.
 apps:
   archi:
+    name: "Archi"
     image: "ghcr.io/votre-org/onyxia-app-archi:0.1.0"
     command: "/usr/local/bin/archi"
+  jdemetra:
+    name: "JDemetra+"
+    image: "ghcr.io/votre-org/onyxia-app-jdemetra:0.1.0"
+    command: "/usr/local/bin/jdemetra"
+  orange:
+    name: "Orange"
+    image: "ghcr.io/votre-org/onyxia-app-orange:0.1.0"
+    command: "/usr/local/bin/orange"
 
 # Options propres au terminal (exposées dans l'UI Onyxia)
 terminal:

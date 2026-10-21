@@ -5,13 +5,17 @@ Un service du catalogue qui lance, au choix dans le formulaire :
 - **terminal** (par défaut) : un terminal web complet (ttyd + tmux + zsh), avec
   Neovim/LazyVim, opencode, uv, Quarto et des **sessions isolées pour agents IA** ;
 - **application** : une seule application graphique affichée dans le navigateur
-  via Xpra (aujourd'hui : **Archi**, l'outil de modélisation ArchiMate).
+  via Xpra, pour des logiciels de bureau sans équivalent web :
+  - **JDemetra+** : désaisonnalisation (X-13, TRAMO-SEATS) ;
+  - **Orange** : apprentissage automatique visuel, par blocs ;
+  - **Archi** : modélisation ArchiMate.
 
 Dans les deux cas : même URL, même mot de passe (celui du service Onyxia), mêmes
 intégrations que les IDE officiels (S3, Vault, git, kubectl, script d'init, IA).
 
-L'image terminal peut aussi être lancée **avec le chart officiel `vscode-python`**
-(image personnalisée), donc depuis un lien de lancement Onyxia existant.
+Ces images (terminal comme applications) peuvent aussi être lancées **avec le chart
+officiel `vscode-python`** (image personnalisée), donc depuis un lien de lancement
+Onyxia existant.
 
 ```
 images/
@@ -19,7 +23,9 @@ images/
                                   page de connexion, agent-session
   xpra/       onyxia-xpra       : terminal + Xpra 6 et son client HTML5
   archi/      onyxia-app-archi  : xpra + Archi (données redirigées vers ~/work)
-  build.sh    construction locale des 3 images, dans l'ordre
+  jdemetra/   onyxia-app-jdemetra : xpra + JDemetra+ (archive standalone, JRE inclus)
+  orange/     onyxia-app-orange : xpra + Orange (environnement uv dans /opt/orange)
+  build.sh    construction locale des images, dans l'ordre
 chart/terminal/
   values.yaml          launcher.mode / launcher.app, catalogue "apps", bloc "ai"
   values.schema.json   formulaire Onyxia (onglets "Launch", "Terminal", "AI Assistant"…)
@@ -51,7 +57,7 @@ local/                 (ignoré par git) valeurs et scripts de test personnels
 
 ## 1. Construire les images
 
-Automatique : le workflow `.github/workflows/docker.yml` construit et publie les trois
+Automatique : le workflow `.github/workflows/docker.yml` construit et publie les
 images sur `ghcr.io/<propriétaire>/` à chaque push sur `main` (`latest` + `sha-xxxxxxx`)
 et à chaque tag `v*` (version). Les pull requests ne construisent que l'image terminal,
 sans la publier.
@@ -63,7 +69,7 @@ d'opencode) :
 REGISTRY=ghcr.io/mon-org VERSION=0.1.0 ./images/build.sh
 ```
 
-Puis remplacer `ghcr.io/votre-org` dans `values.yaml` (`service.image`, `apps.archi.image`)
+Puis remplacer `ghcr.io/votre-org` dans `values.yaml` (`service.image`, `apps.*.image`)
 et dans `values.schema.json` (`service.image`).
 
 Test local :
@@ -102,7 +108,8 @@ ai:                             # facultatif : copier le bloc "ai" d'un service 
   enabled: true
 ```
 
-Mode application : `--set launcher.mode=application --set launcher.app=archi`.
+Mode application : `--set launcher.mode=application --set launcher.app=jdemetra`
+(ou `orange`, `archi`).
 
 ## 3. Lancer l'image avec le chart vscode-python
 
@@ -124,10 +131,25 @@ Un lien de lancement Onyxia de `vscode-python` avec ces deux paramètres
 (`service.image.custom.enabled=true`, `service.image.custom.version=…`) ouvre donc
 directement le terminal, avec sa configuration S3 / Vault / git / IA habituelle.
 
+Même principe pour les applications : les images d'application héritent du faux
+`code-server` et fixent elles-mêmes `LAUNCH_MODE=application` et `APP_COMMAND`, donc
+l'application s'ouvre directement (Xpra sur 8080, même mot de passe) :
+
+| `service.image.custom.version` | Ouvre |
+|---|---|
+| `ghcr.io/mon-org/onyxia-terminal:latest` | le terminal |
+| `ghcr.io/mon-org/onyxia-app-jdemetra:latest` | JDemetra+ |
+| `ghcr.io/mon-org/onyxia-app-orange:latest` | Orange |
+| `ghcr.io/mon-org/onyxia-app-archi:latest` | Archi |
+
+Exemple de lien (à adapter à l'instance Onyxia) :
+`https://datalab.sspcloud.fr/launcher/ide/vscode-python?autoLaunch=true&service.image.custom.enabled=true&service.image.custom.version=«ghcr.io/mon-org/onyxia-app-jdemetra:latest»`
+
 ## 4. Ajouter une application
 
 1. Créer `images/<app>/Dockerfile` à partir de `onyxia-xpra`, qui installe l'application
-   et définit `ENV APP_COMMAND=...` (voir `images/archi`).
+   et définit `ENV APP_COMMAND=...` (voir `images/archi`) : c'est aussi ce qui la fait
+   démarrer avec le chart vscode-python, qui ne passe pas cette variable.
 2. Déclarer l'application dans `values.yaml` :
    ```yaml
    apps:
@@ -161,6 +183,8 @@ Le chart refuse de s'installer si l'application choisie n'est pas déclarée dan
 | Fin de l'application | `--exit-with-children` : fermer Archi arrête le conteneur, Kubernetes le relance |
 | Verrouillage | `--start-new-commands=no` : l'utilisateur ne peut lancer que l'application prévue |
 | Données Archi | `Archi.ini` réécrit : préférences, plugins et modèles dans `~/work/.archi` et `~/work/Archi` |
+| JDemetra+ | archive « standalone » officielle (JRE 21 inclus) ; `--userdir ~/work/.jdemetra/userdir`, cache dans `/tmp` |
+| Orange | `orange3` + PyQt6 dans un environnement uv séparé (`/opt/orange`), pour ne pas toucher aux projets de l'utilisateur ; réglages et extensions dans `~/work/.orange` (`XDG_DATA_HOME`, `XDG_CONFIG_HOME`) ; aide en ligne (QtWebEngine) sans GPU ni bac à sable |
 | Xpra | version 6 du dépôt xpra.org (Ubuntu 24.04 ne fournit que la 3.1) |
 | Logs ttyd | `--debug 3` : le niveau par défaut écrit des identifiants dans les logs |
 
@@ -208,8 +232,10 @@ uniquement via Helm), Firefox (les tests navigateur sont faits avec Chromium).
   (API File System Access, utilisée par trzsz.js) ; Firefox permet seulement le glisser-déposer.
 - Agents isolés : filtrage réseau par port et non par hôte, UDP/DNS non filtré, seuls
   les noms de domaine sont visibles (voir la doc dédiée).
-- Rendu graphique logiciel (pas de GPU) : parfait pour Archi, lent pour la 3D.
-- Prévoir au moins 2 Go de mémoire en mode application (JVM + Xpra).
+- Rendu graphique logiciel (pas de GPU) : convient à Archi, JDemetra+ et Orange, lent pour la 3D.
+- Prévoir au moins 2 Go de mémoire en mode application (JVM + Xpra), davantage pour
+  de gros jeux de données dans Orange.
+- Tau-Argus (secret statistique) n'est pas proposé : il n'existe que pour Windows.
 - L'URL de téléchargement d'Archi (`archimatetool/archi.io`, tag `5.10`) change à chaque
   version : à mettre à jour dans `images/archi/Dockerfile`.
 - Images x86_64 uniquement.

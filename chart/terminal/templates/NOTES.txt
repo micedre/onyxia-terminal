@@ -1,5 +1,6 @@
 {{- $appMode := eq ((.Values.launcher).mode | default "terminal") "application" -}}
-{{- $name := ternary (printf "%s (Xpra)" (.Values.launcher.app | title)) "Terminal" $appMode -}}
+{{- $app := index (.Values.apps | default dict) (.Values.launcher.app | default "") | default dict -}}
+{{- $name := ternary (printf "%s (Xpra)" ($app.name | default (.Values.launcher.app | title))) "Terminal" $appMode -}}
 {{- $ctx := dict "serviceName" $name "context" $ -}}
 {{- template "library-chart.general-message" . -}}
 {{- template "library-chart.notes-access-title" . -}}

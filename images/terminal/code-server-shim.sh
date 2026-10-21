@@ -2,7 +2,9 @@
 # Installé en /usr/bin/code-server : permet de lancer cette image avec le chart
 # officiel vscode-python (service.image.custom), qui exécute
 # « code-server --host 0.0.0.0 ~/work » sur le port 8080. On ignore ces
-# arguments et on démarre le terminal derrière nginx (voir start.sh).
+# arguments et on lance start.sh sur ce port : le terminal derrière nginx, ou,
+# dans une image d'application (LAUNCH_MODE et APP_COMMAND fixés par l'image),
+# l'application via Xpra.
 
 # Les scripts d'init écrits pour VS Code appellent aussi code-server pour gérer
 # les extensions : sans objet ici, on ne fait rien (et surtout on ne démarre pas
