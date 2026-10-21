@@ -21,11 +21,12 @@ if [[ -n "${GIT_REPOSITORY:-}" && ! -e "$WORKDIR/$(basename "$GIT_REPOSITORY" .g
 fi
 
 # =============================================================================
-#  Mode application : Xpra (serveur X virtuel + client HTML5 sur le même port)
+#  Mode application : Xpra (serveur X virtuel + client HTML5) derrière nginx
 # =============================================================================
 start_application() {
     command -v xpra >/dev/null || die "Xpra n'est pas installé dans cette image (le mode application nécessite une image d'application)."
     [[ -n "${APP_COMMAND:-}" ]] || die "APP_COMMAND est vide."
+    [[ -f /opt/nginx-xpra.conf ]] || die "/opt/nginx-xpra.conf absent (image d'application trop ancienne ?)."
 
     export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/runtime-$(id -u)}"
     mkdir -p "$XDG_RUNTIME_DIR" && chmod 700 "$XDG_RUNTIME_DIR"
@@ -36,7 +37,13 @@ start_application() {
         /opt/app/prepare.sh
     fi
 
-    echo "Démarrage d'Xpra sur le port $PORT : $APP_COMMAND"
+    # nginx sur $PORT sert le client HTML5 et passe le WebSocket à Xpra, local
+    local xpra_port=14500
+    sed -e "s/__PORT__/${PORT}/" -e "s/__XPRA_PORT__/${xpra_port}/" /opt/nginx-xpra.conf > /tmp/nginx-xpra.conf
+    nginx -e /dev/stderr -c /tmp/nginx-xpra.conf -t -q || die "configuration nginx invalide."
+    nginx -e /dev/stderr -c /tmp/nginx-xpra.conf -g 'daemon off;' &
+
+    echo "Démarrage d'Xpra (port $PORT, via nginx) : $APP_COMMAND"
     cd "$WORKDIR"
     # - auth=env,name=PASSWORD : même mot de passe que le service Onyxia
     # - start-child-after-connect : l'appli démarre à la première connexion, une
@@ -50,7 +57,7 @@ start_application() {
         --dbus=no \
         --dbus-launch= \
         --mdns=no \
-        --bind-tcp="0.0.0.0:${PORT},auth=env,name=PASSWORD,verify-username=no" \
+        --bind-tcp="127.0.0.1:${xpra_port},auth=env,name=PASSWORD,verify-username=no" \
         --html=on \
         --start-child-after-connect="$APP_COMMAND" \
         --exit-with-children=yes \

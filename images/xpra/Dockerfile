@@ -26,6 +26,9 @@ RUN printf '%s\n' \
         'sound = false' \
         > /etc/xpra/html5-client/default-settings.txt
 
+# Frontal nginx devant Xpra (voir start.sh)
+COPY nginx-xpra.conf /opt/nginx-xpra.conf
+
 USER 1000
 
 # Par défaut, une image d'application démarre en mode application

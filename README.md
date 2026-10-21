@@ -7,7 +7,7 @@ Un service du catalogue qui lance, au choix dans le formulaire :
 - **application** : une seule application graphique affichée dans le navigateur
   via Xpra, pour des logiciels de bureau sans équivalent web :
   - **JDemetra+** : désaisonnalisation (X-13, TRAMO-SEATS) ;
-  - **Orange** : apprentissage automatique visuel, par blocs ;
+  - **Orange ML** : apprentissage automatique visuel, par blocs ;
   - **Archi** : modélisation ArchiMate.
 
 Dans les deux cas : même URL, même mot de passe (celui du service Onyxia), mêmes
@@ -202,7 +202,7 @@ l'application s'ouvre directement (Xpra sur 8080, même mot de passe) :
 | `ghcr.io/mon-org/onyxia-app-archi:latest` | Archi |
 
 Exemple de lien (à adapter à l'instance Onyxia) :
-`https://datalab.sspcloud.fr/launcher/ide/vscode-python?autoLaunch=true&service.image.custom.enabled=true&service.image.custom.version=«ghcr.io/mon-org/onyxia-app-jdemetra:latest»`
+`https://datalab.sspcloud.fr/launcher/ide/vscode-python?name=jdemetra&autoLaunch=true&service.image.custom.enabled=true&service.image.custom.version=«ghcr.io/micedre/onyxia-app-jdemetra:latest»`
 
 ## 4. Ajouter une application
 
@@ -224,7 +224,8 @@ Le chart refuse de s'installer si l'application choisie n'est pas déclarée dan
 
 | Sujet | Choix |
 |---|---|
-| Un seul port | nginx (devant ttyd) ou Xpra écoutent sur 7681 (8080 avec le chart vscode-python) : même ingress, mêmes sondes quel que soit le mode |
+| Un seul port | nginx écoute sur 7681 (8080 avec le chart vscode-python), devant ttyd ou Xpra : même ingress, mêmes sondes quel que soit le mode |
+| Frontal application | nginx sert lui-même le client HTML5 d'Xpra (fichiers `.gz` précompressés) et ne passe à Xpra (`127.0.0.1:14500`, avec son mot de passe) que le WebSocket : servis par Xpra (en brotli), une partie des fichiers revenait en 502 dans le navigateur d'un utilisateur, d'où des erreurs `XpraClient is not defined` |
 | Authentification terminal | page de connexion servie par nginx ; le cookie vaut SHA-256(sel:mot de passe), le sel étant tiré à chaque démarrage (le mot de passe n'est stocké ni dans le cookie ni dans la configuration) ; la page exige HTTPS (WebCrypto) |
 | Authentification application | Xpra `auth=env,name=PASSWORD,verify-username=no` (défi HMAC, le mot de passe ne circule pas en clair) |
 | ttyd | écoute sur une socket unix privée (`/tmp/onyxia-terminal`, 700) et non sur un port local : ni le pod ni une session agent ne peuvent l'atteindre sans passer par nginx |

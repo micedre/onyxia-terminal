@@ -77,6 +77,7 @@ adjustment) and `images/orange` (Orange Data Mining). Each app image sets
 browser ──HTTPS──▶ ingress ──▶ nginx :7681 ──cookie ok──▶ /terminal/ → ttyd (unix socket /tmp/onyxia-terminal/ttyd.sock, dir 700)
                                            ├─▶ /proxy/PORT/ → 127.0.0.1:PORT (fallback [::1])
                                            └─▶ /login, /fonts/ (public)
+application mode: ingress ──▶ nginx :7681 (static Xpra HTML5 client from /usr/share/xpra/www) ──WebSocket──▶ Xpra 127.0.0.1:14500 (password auth)
 ttyd → tmux session "main" → zsh
 ```
 
@@ -134,6 +135,7 @@ vscode-python compatibility: `local/install-vscode.sh` (release `vscode-term`, v
   - right-click menu keys in use: h p m e r t a d b z x.
 - **tmux copy:** `mode-keys` defaults to emacs here (tmux starts before zsh exports `EDITOR`), and an emacs selection excludes the cell under the mouse, so dragging dropped the last character. The default `word-separators` (all punctuation) cut double-clicked base64 tokens. Both are set in `tmux.conf`, and `clip.mjs` asserts them.
 - **Xpra apps:**
+  - nginx serves the HTML5 client itself (`images/xpra/nginx-xpra.conf`). Served directly by Xpra (brotli, its own HTTP server), part of the files came back as 502 in the user's Edge (`XpraClient is not defined`). It was not reproducible from the cluster or headless Chromium, and it was fixed by the front. `Error importing enc_remote` in the logs is harmless;
   - started with `--start-child-after-connect`, otherwise they size their window for the 8192x4096 initial virtual screen;
   - JDemetra+ (NetBeans) needs GTK 3 for Java's Desktop API (no workspace repository without it), and keeps a lock in its userdir: a second instance with the same `HOME` hands over to the first and exits.
 - **Shortcuts:** Alt+c is fzf's cd widget, so don't bind it (theme is Alt+m). Browser-reserved keys (Ctrl+W/T) are why everything uses Alt.
