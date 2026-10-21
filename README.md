@@ -7,7 +7,7 @@ Un service du catalogue qui lance, au choix dans le formulaire :
 - **application** : une seule application graphique affichée dans le navigateur
   via Xpra, pour des logiciels de bureau sans équivalent web :
   - **JDemetra+** : désaisonnalisation (X-13, TRAMO-SEATS) ;
-  - **Orange ML** : apprentissage automatique visuel, par blocs ;
+  - **Orange Datamining** : apprentissage automatique visuel, par blocs ;
   - **Archi** : modélisation ArchiMate.
 
 Dans les deux cas : même URL, même mot de passe (celui du service Onyxia), mêmes
@@ -259,7 +259,7 @@ conteneur. Les données de l'application sont redirigées vers `~/work`.
 - applications : [Xpra](https://xpra.org/) et son client
   [xpra-html5](https://github.com/Xpra-org/xpra-html5),
   [JDemetra+](https://github.com/jdemetra/jdplus-main),
-  [Orange](https://orangedatamining.com/), [Archi](https://www.archimatetool.com/).
+  [Orange Datamining](https://orangedatamining.com/), [Archi](https://www.archimatetool.com/).
 
 Le détail des choix et leurs raisons : [AGENTS.md](AGENTS.md#technical-choices).
 
@@ -282,6 +282,3 @@ Le détail des choix et leurs raisons : [AGENTS.md](AGENTS.md#technical-choices)
 - Rendu graphique logiciel (pas de GPU) : convient à Archi, JDemetra+ et Orange, lent pour la 3D.
 - Prévoir au moins 2 Go de mémoire en mode application (JVM + Xpra), davantage pour
   de gros jeux de données dans Orange.
-- L'URL de téléchargement d'Archi (`archimatetool/archi.io`, tag `5.10`) change à chaque
-  version : à mettre à jour dans `images/archi/Dockerfile`.
-- Images x86_64 uniquement.
