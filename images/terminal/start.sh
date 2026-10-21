@@ -13,6 +13,13 @@ die() { echo "ERREUR : $*" >&2; exit 1; }
 [[ -n "${PASSWORD:-}" ]] || die "la variable PASSWORD est vide, refus de démarrer sans authentification."
 mkdir -p "$WORKDIR"
 
+# Dépôt git du formulaire (git.repository) : onyxia-init.sh ne le clone que si un
+# jeton git est renseigné ; sans jeton (dépôt public), on le clone ici
+if [[ -n "${GIT_REPOSITORY:-}" && ! -e "$WORKDIR/$(basename "$GIT_REPOSITORY" .git)" ]]; then
+    git -C "$WORKDIR" clone -q ${GIT_BRANCH:+--branch "$GIT_BRANCH"} "$GIT_REPOSITORY" \
+        || echo "Clone de $GIT_REPOSITORY impossible, on continue sans." >&2
+fi
+
 # =============================================================================
 #  Mode application : Xpra (serveur X virtuel + client HTML5 sur le même port)
 # =============================================================================

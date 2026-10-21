@@ -141,6 +141,7 @@ vscode-python compatibility: `local/install-vscode.sh` (release `vscode-term`, v
 - **SSP Cloud pods:**
   - the AppArmor profile `cri-containerd.apparmor.d` denies `mount`, so bubblewrap and similar can't work;
   - Landlock ABI 6 works: landrun needs `--best-effort`, and `agent-session` checks ABI ≥ 4 itself. Agent sessions also can't `bind` TCP ports (verified).
+- **onyxia-init.sh clone bug:** without `GIT_PERSONAL_ACCESS_TOKEN`, `CLONE_URL` is never set, so `git.repository` isn't cloned (`fatal: You must specify a repository to clone`). `start.sh` clones it as a fallback. Upstream fix belongs in onyxia-base.
 - **`kubectl exec`** with background processes hangs until they exit. Use `setsid nohup … >/dev/null 2>&1 </dev/null &` and a `timeout`.
 - **zsh** asks for confirmation on `rm *`, which breaks scripted terminal tests. Use fresh directories instead.
 - **Page cache:** the enriched index page is cached as `~/.cache/onyxia-terminal/index-vN.html`. That path is not persistent, but bump `FONT_INDEX` in `start.sh` when the page structure changes.

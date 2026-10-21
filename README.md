@@ -15,7 +15,7 @@ intégrations que les IDE officiels (S3, Vault, git, kubectl, script d'init, IA)
 
 Ces images (terminal comme applications) peuvent aussi être lancées **avec le chart
 officiel `vscode-python`** (image personnalisée), donc depuis un lien de lancement
-Onyxia existant.
+Onyxia existant : voir les [cas d'usage](#cas-dusage).
 
 ```
 images/
@@ -36,6 +36,65 @@ docs/
   docker.yml           construction et publication des images (GHCR)
 local/                 (ignoré par git) valeurs et scripts de test personnels
 ```
+
+## Cas d'usage
+
+### Faire travailler un agent IA sur un dépôt, sans lui confier vos identifiants
+
+Un service minimal, lancé par un simple lien : pas de S3, pas de Vault, aucun droit
+Kubernetes, le dépôt déjà cloné, et l'agent dans une **session isolée** (utilisateur
+séparé, Landlock, internet via un proxy à liste blanche, clé du LLM jamais visible).
+Même si l'agent est manipulé (*prompt injection* par le contenu du dépôt, d'une page
+web, d'une dépendance), il n'a rien à exfiltrer et ne peut rien pousser.
+
+Le lien, à adapter (domaine de l'instance Onyxia, dépôt) :
+
+```
+https://datalab.sspcloud.fr/launcher/ide/vscode-python?name=«agent-projet»&autoLaunch=true&service.image.custom.enabled=true&service.image.custom.version=«ghcr.io/micedre/onyxia-terminal:latest»&s3.enabled=false&vault.enabled=false&kubernetes.enabled=false&git.enabled=true&git.repository=«https://github.com/mon-org/projet.git»
+```
+
+| Paramètre | Rôle |
+|---|---|
+| `service.image.custom.*` | lance l'image terminal avec le chart `vscode-python` (voir [§3](#3-lancer-limage-avec-le-chart-vscode-python)) |
+| `s3.enabled=false`, `vault.enabled=false` | aucun identifiant S3 ni Vault dans le service |
+| `kubernetes.enabled=false` | le compte de service n'a aucun droit sur le namespace |
+| `git.enabled=true`, `git.repository=…` | le dépôt est cloné au démarrage dans `~/work/projet` (`git.branch=…` pour une autre branche) |
+| `autoLaunch=true`, `name=…` | lancement direct, sans passer par le formulaire |
+
+Le bloc IA (opencode) est repris du profil Onyxia de l'utilisateur. Votre jeton git
+l'est aussi s'il est renseigné : il reste dans votre session, jamais dans celle de l'agent.
+
+Puis, dans le terminal :
+
+```bash
+cd ~/work/projet
+agent-session                        # opencode dans l'onglet orange « agent:projet »
+                                     # (ou clic droit → Session agent isolée)
+agent-session log -f                 # suivre ses requêtes internet et ses appels au LLM
+agent-session allow conda.anaconda.org   # autoriser un domaine (PyPI, npm, GitHub le sont déjà)
+agent-session fetch projet           # récupérer ses commits : branches agent-projet/*
+git log -p HEAD..agent-projet/main   # relire avant d'intégrer
+```
+
+C'est vous qui poussez une branche et ouvrez la PR, avec vos identifiants : l'agent
+travaille sur une copie sans remote. Deux règles : ne lancez pas le code de l'agent
+(tests, `uv run`, hooks…) dans votre session, mais dans la sienne ; protégez les
+fichiers de CI (`.github/workflows`…), autre canal d'exfiltration. Architecture, choix
+et limites : [docs/isolation-agents.md](docs/isolation-agents.md).
+
+### Un terminal complet dans le navigateur
+
+Pour qui préfère la ligne de commande à un IDE : sessions tmux qui survivent à la
+fermeture de l'onglet, Neovim/LazyVim prêt à l'emploi, uv, Quarto, transferts de
+fichiers par glisser-déposer, et aperçu d'une application web lancée dans le terminal
+(Streamlit, Shiny, `http.server`…) via `/proxy/PORT/`. Détail [ci-dessous](#le-terminal).
+
+### Un logiciel de bureau sans équivalent web
+
+JDemetra+ (désaisonnalisation), Orange (apprentissage automatique visuel) ou Archi,
+affichés dans le navigateur : il suffit de remplacer l'image du lien ci-dessus par
+`onyxia-app-jdemetra`, `onyxia-app-orange` ou `onyxia-app-archi` (voir
+[§3](#3-lancer-limage-avec-le-chart-vscode-python)).
 
 ## Le terminal
 
@@ -178,6 +237,7 @@ Le chart refuse de s'installer si l'application choisie n'est pas déclarée dan
 | Menu du clic droit | `display-menu -O` : sans cette option, le relâchement du bouton (~100 ms après le clic) ferme le menu aussitôt |
 | Neovim | archive officielle (celle d'Ubuntu 24.04 est trop ancienne pour LazyVim) ; presse-papiers en OSC 52, collage depuis le registre (lire le presse-papiers en OSC 52 bloquerait sous tmux) |
 | opencode | script d'installation d'onyxia-base ; en CI, jeton GitHub passé en secret de build (évite la limite d'API anonyme) ; configuration montée par le chart (`library-chart.secretOpencode`) |
+| Dépôt git du formulaire | `onyxia-init.sh` (onyxia-base) ne clone `git.repository` que si un jeton git est renseigné ; sans jeton, `start.sh` clone lui-même le dépôt (public) |
 | zsh et scripts d'init | `~/.bashrc` porte un marqueur de fin de configuration ; `~/.zshrc` source ce que les scripts d'init ajoutent après |
 | Agents isolés | utilisateur `agent` + Landlock (landrun) + tinyproxy + proxy de clé LLM ; bubblewrap écarté car le profil AppArmor des pods interdit les montages — détail dans [docs/isolation-agents.md](docs/isolation-agents.md) |
 | Démarrage de l'application | `--start-child-after-connect` : à la première connexion, une fois l'écran virtuel ajusté au navigateur (sinon JDemetra+ s'ouvrait en 7376×3720) |
