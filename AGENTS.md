@@ -133,6 +133,9 @@ vscode-python compatibility: `local/install-vscode.sh` (release `vscode-term`, v
   - `display-menu` needs `-O`, or the menu closes on button release;
   - right-click menu keys in use: h p m e r t a d b z x.
 - **tmux copy:** `mode-keys` defaults to emacs here (tmux starts before zsh exports `EDITOR`), and an emacs selection excludes the cell under the mouse, so dragging dropped the last character. The default `word-separators` (all punctuation) cut double-clicked base64 tokens. Both are set in `tmux.conf`, and `clip.mjs` asserts them.
+- **Xpra apps:**
+  - started with `--start-child-after-connect`, otherwise they size their window for the 8192x4096 initial virtual screen;
+  - JDemetra+ (NetBeans) needs GTK 3 for Java's Desktop API (no workspace repository without it), and keeps a lock in its userdir: a second instance with the same `HOME` hands over to the first and exits.
 - **Shortcuts:** Alt+c is fzf's cd widget, so don't bind it (theme is Alt+m). Browser-reserved keys (Ctrl+W/T) are why everything uses Alt.
 - **Neovim / tokyonight:** setting `background=light` before the colorscheme loads is overridden. `nvim-onyxia.lua` applies it on `VimEnter`. Running instances are updated via `nvim --server <sock> --remote-expr`.
 - **SSP Cloud pods:**
@@ -152,7 +155,7 @@ vscode-python compatibility: `local/install-vscode.sh` (release `vscode-term`, v
 | File transfers | `transfert.sh`, `tmux.conf` (User0, menu, `[↑]`/`[↓]`), `terminal-page.js` | `xfer.mjs` |
 | Theme | `themes.json`, `theme.sh`, `terminal-page.js`, `tmux.conf` (User1/2, hooks), `nvim-onyxia.lua`, `login.html` | `theme.mjs` |
 | Port proxy | `nginx-terminal.conf`, `nginx-proxy-common.conf`, `ports.sh`, `terminal-page.js`, `login.html` (`?next=`), chart `TERMINAL_URL` | `proxy.mjs` |
-| Desktop apps (Xpra) | `images/xpra`, `images/<app>/`, `start.sh` (`start_application`), chart `apps`/`launcher`, schema `launcher.app.listEnum`, CI steps, `images/build.sh` | manual: deploy, screenshot of the Xpra client (terminal chart and vscode-python) |
+| Desktop apps (Xpra) | `images/xpra`, `images/<app>/`, `start.sh` (`start_application`), chart `apps`/`launcher`, schema `launcher.app.listEnum`, CI steps, `images/build.sh` | `run.sh app [title]` (`app.mjs`: GET / = 200, Xpra password, window title, screenshot); for vscode-python, run `node app.mjs` directly (pod `vscode-term-vscode-python-0`, container `vscode-python`) |
 | Agent isolation | `agent-session.sh`, `agent-*.conf`, `agent-session-config.py`, Dockerfile (`agent` user, landrun, tinyproxy) | manual checks, see `docs/isolation-agents.md#vérifications` |
 
 When adding a feature, update `aide.txt`, `chart/terminal/templates/NOTES.txt` (FR and EN),

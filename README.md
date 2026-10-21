@@ -180,7 +180,8 @@ Le chart refuse de s'installer si l'application choisie n'est pas déclarée dan
 | opencode | script d'installation d'onyxia-base ; en CI, jeton GitHub passé en secret de build (évite la limite d'API anonyme) ; configuration montée par le chart (`library-chart.secretOpencode`) |
 | zsh et scripts d'init | `~/.bashrc` porte un marqueur de fin de configuration ; `~/.zshrc` source ce que les scripts d'init ajoutent après |
 | Agents isolés | utilisateur `agent` + Landlock (landrun) + tinyproxy + proxy de clé LLM ; bubblewrap écarté car le profil AppArmor des pods interdit les montages — détail dans [docs/isolation-agents.md](docs/isolation-agents.md) |
-| Fin de l'application | `--exit-with-children` : fermer Archi arrête le conteneur, Kubernetes le relance |
+| Démarrage de l'application | `--start-child-after-connect` : à la première connexion, une fois l'écran virtuel ajusté au navigateur (sinon JDemetra+ s'ouvrait en 7376×3720) |
+| Fin de l'application | `--exit-with-children` : fermer l'application arrête le conteneur, Kubernetes le relance |
 | Verrouillage | `--start-new-commands=no` : l'utilisateur ne peut lancer que l'application prévue |
 | Données Archi | `Archi.ini` réécrit : préférences, plugins et modèles dans `~/work/.archi` et `~/work/Archi` |
 | JDemetra+ | archive « standalone » officielle (JRE 21 inclus) ; `--userdir ~/work/.jdemetra/userdir`, cache dans `/tmp` |
@@ -212,6 +213,10 @@ Sur SSP Cloud (octobre 2026), avec les images construites par la CI :
 - `agent-session` : contrôles d'isolation détaillés dans
   [docs/isolation-agents.md](docs/isolation-agents.md#vérifications) ;
 - Archi 5.10 sous Xpra 6 : affichage, authentification, données dans `~/work`.
+- JDemetra+ 3.9 et Orange 3.40 sous Xpra 6, avec le chart `terminal` et avec le chart
+  `vscode-python` (image personnalisée) : pod prêt (sondes HTTP), mot de passe, fenêtre
+  de l'application à la taille du navigateur, données dans `~/work`, redémarrage
+  après fermeture de l'application ; test automatisé `tests/e2e/run.sh app`.
 
 Non vérifié : le formulaire Onyxia du chart `terminal` publié dans un catalogue (testé
 uniquement via Helm), Firefox (les tests navigateur sont faits avec Chromium).
