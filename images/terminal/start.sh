@@ -32,6 +32,9 @@ start_application() {
     echo "Démarrage d'Xpra sur le port $PORT : $APP_COMMAND"
     cd "$WORKDIR"
     # - auth=env,name=PASSWORD : même mot de passe que le service Onyxia
+    # - start-child-after-connect : l'appli démarre à la première connexion, une
+    #   fois l'écran virtuel ajusté au navigateur (sinon elle ouvre une fenêtre
+    #   à la taille de l'écran initial, 8192x4096)
     # - exit-with-children     : fermer l'appli arrête le conteneur, Kubernetes le relance
     # - start-new-commands=no  : l'utilisateur ne peut lancer que l'appli prévue
     exec xpra seamless :100 \
@@ -42,7 +45,7 @@ start_application() {
         --mdns=no \
         --bind-tcp="0.0.0.0:${PORT},auth=env,name=PASSWORD,verify-username=no" \
         --html=on \
-        --start-child="$APP_COMMAND" \
+        --start-child-after-connect="$APP_COMMAND" \
         --exit-with-children=yes \
         --start-new-commands=no \
         --file-transfer=yes \

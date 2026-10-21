@@ -3,20 +3,28 @@
 # chart terminal déjà déployée (voir local/install.sh).
 #   tests/e2e/run.sh                 tous les tests
 #   tests/e2e/run.sh clip theme      certains tests (login clip xfer theme proxy nvim-explorer)
+#   tests/e2e/run.sh app [titre]     mode application (Xpra) : fenêtre affichée
 # Variables : RELEASE (défaut terminal-test), BASE (défaut : hôte de l'ingress),
-# OUT (captures d'écran, défaut : dossier temporaire).
+# CONTAINER (défaut terminal), OUT (captures d'écran, défaut : dossier temporaire).
 set -euo pipefail
 cd "$(dirname "$0")"
 RELEASE="${RELEASE:-terminal-test}"
 POD="$RELEASE-0"
+CONTAINER="${CONTAINER:-terminal}"
 export RELEASE
 
 [[ -d node_modules/playwright ]] || { npm install --silent >/dev/null && npx playwright install chromium >/dev/null; }
 
 BASE="${BASE:-https://$(helm get values "$RELEASE" -o json | python3 -c 'import json,sys; print(json.load(sys.stdin)["ingress"]["hostname"])')}"
-PASSWORD="$(kubectl exec "$POD" -c terminal -- printenv PASSWORD)"
+PASSWORD="$(kubectl exec "$POD" -c "$CONTAINER" -- printenv PASSWORD)"
 OUT="${OUT:-$(mktemp -d)}"
-until curl -sf -o /dev/null "$BASE/login"; do sleep 3; done
+until curl -sf -o /dev/null "$BASE/"; do sleep 3; done
+
+if [[ "${1:-}" == app ]]; then
+    node app.mjs "$BASE" "$PASSWORD" "$OUT/app" "${2:-}"
+    echo "Captures : $OUT"
+    exit
+fi
 
 tests=("$@")
 [[ ${#tests[@]} -eq 0 ]] && tests=(login clip xfer theme proxy nvim-explorer)
