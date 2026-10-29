@@ -1,0 +1,18 @@
+# Prompt du terminal web SSP Cloud (Starship)
+
+# Modules retirés : toujours identiques dans un pod Onyxia, donc sans information
+[aws]
+disabled = true        # région MinIO injectée par Onyxia (us-east-1)
+
+[container]
+disabled = true        # on est toujours dans un conteneur
+
+# Utiles ici
+[status]
+disabled = false       # code de sortie de la dernière commande en échec
+
+[cmd_duration]
+min_time = 5_000       # durée des commandes longues (traitements, uv sync…)
+
+[directory]
+truncation_length = 4  # ~/work/projet/sous-dossier reste lisible

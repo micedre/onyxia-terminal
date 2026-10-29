@@ -82,6 +82,7 @@ COPY --chmod=0755 agent-session.sh /usr/local/bin/agent-session
 RUN useradd --uid 2000 --user-group --create-home --shell /bin/bash agent
 COPY dotfiles/zshrc     ${HOME}/.zshrc
 COPY dotfiles/tmux.conf ${HOME}/.tmux.conf
+COPY dotfiles/starship.toml ${HOME}/.config/starship.toml
 COPY dotfiles/bashrc-extra /tmp/bashrc-extra
 # Le marqueur sépare la config de l'image de ce que les scripts d'init ajoutent
 # ensuite à ~/.bashrc, que ~/.zshrc reprend

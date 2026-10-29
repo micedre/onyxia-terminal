@@ -58,6 +58,7 @@ adjustment) and `images/orange` (Orange Data Mining). Each app image sets
 | `images/terminal/dotfiles/tmux.conf` | keybindings (Alt+…), status-bar buttons, French right-click menu, user keys, hooks |
 | `images/terminal/dotfiles/nvim-onyxia.lua` | appended to LazyVim's `options.lua`: OSC 52 clipboard, background from tmux `@theme` |
 | `images/terminal/dotfiles/nvim-plugins-onyxia.lua` | copied to `lua/plugins/onyxia.lua`: snacks explorer/files/grep show hidden files |
+| `images/terminal/dotfiles/starship.toml` | prompt: `aws` (always us-east-1) and `container` modules off, exit status on |
 | `images/terminal/aide.txt`, `aide.sh` | help popup (Alt+h, `[?]`) |
 | `images/terminal/transfert.sh` | trz/tsz in a temporary tmux pane (menu, `[↑]`/`[↓]`, drag-and-drop) |
 | `images/terminal/theme.sh` | `theme` command and tmux-side theme plumbing |
